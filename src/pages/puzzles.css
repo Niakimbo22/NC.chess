@@ -1,0 +1,64 @@
+.puzzles-page { max-width: 1100px; margin: 0 auto; }
+
+.puzzle-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  justify-content: center;
+}
+.puzzle-tabs button { font-weight: 700; }
+.puzzle-tabs button.active { background: var(--accent); color: #fff; }
+
+.puzzle-layout {
+  display: grid;
+  grid-template-columns: minmax(0, calc(100vh - 180px)) minmax(280px, 360px);
+  gap: 20px;
+  justify-content: center;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .puzzle-layout { grid-template-columns: 1fr; }
+}
+
+.puzzle-side { display: flex; flex-direction: column; gap: 10px; }
+
+.puzzle-info { display: flex; flex-direction: column; gap: 8px; }
+
+.puzzle-elo-row { display: flex; justify-content: space-between; align-items: center; }
+.puzzle-elo { font-size: 26px; font-weight: 800; color: var(--accent); }
+.puzzle-elo-label { color: var(--text-dim); font-size: 13px; }
+.puzzle-delta { margin-left: 10px; font-weight: 800; }
+.puzzle-delta.up { color: var(--accent); }
+.puzzle-delta.down { color: var(--danger); }
+.puzzle-streak { font-size: 18px; font-weight: 700; }
+
+.puzzle-goal { font-size: 16px; font-weight: 600; margin: 4px 0; }
+
+.puzzle-themes { display: flex; flex-wrap: wrap; gap: 6px; }
+.puzzle-theme-chip {
+  background: var(--bg-panel-2);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.puzzle-filter { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.puzzle-filter select { flex: 1; }
+
+.rush-splash {
+  max-width: 460px;
+  margin: 40px auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rush-final { font-size: 20px; }
+
+.rush-header { display: flex; justify-content: space-between; align-items: center; }
+.rush-timer { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.rush-timer.low { color: var(--danger); animation: gp-pulse 1s infinite; }
+.rush-score { font-size: 30px; font-weight: 800; color: var(--accent); }
+.rush-strikes .strike { color: var(--border); font-size: 20px; font-weight: 800; margin-left: 3px; }
+.rush-strikes .strike.used { color: var(--danger); }
