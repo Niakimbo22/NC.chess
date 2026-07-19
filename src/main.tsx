@@ -5,6 +5,7 @@ import App from './App';
 import Home from './pages/Home';
 import PlayHub from './pages/PlayHub';
 import PlayLocal from './pages/PlayLocal';
+import PlayBot from './pages/PlayBot';
 import './index.css';
 
 function Soon({ title }: { title: string }) {
@@ -24,7 +25,7 @@ const router = createHashRouter([
       { index: true, element: <Home /> },
       { path: 'play', element: <PlayHub /> },
       { path: 'play/local', element: <PlayLocal /> },
-      { path: 'play/bot', element: <Soon title="🤖 Jouer contre une IA" /> },
+      { path: 'play/bot', element: <PlayBot /> },
       { path: 'play/friend', element: <Soon title="👥 Jouer entre amis" /> },
       { path: 'puzzles', element: <Soon title="🧩 Puzzles" /> },
       { path: 'lessons', element: <Soon title="🎓 Leçons" /> },
