@@ -8,6 +8,7 @@ import PlayLocal from './pages/PlayLocal';
 import PlayBot from './pages/PlayBot';
 import PlayFriend from './pages/PlayFriend';
 import Settings from './pages/Settings';
+import Analysis from './pages/Analysis';
 import Profile from './pages/Profile';
 import './index.css';
 
@@ -32,7 +33,7 @@ const router = createHashRouter([
       { path: 'play/friend', element: <PlayFriend /> },
       { path: 'puzzles', element: <Soon title="🧩 Puzzles" /> },
       { path: 'lessons', element: <Soon title="🎓 Leçons" /> },
-      { path: 'analysis', element: <Soon title="📊 Analyse" /> },
+      { path: 'analysis', element: <Analysis /> },
       { path: 'openings', element: <Soon title="📖 Ouvertures" /> },
       { path: 'profile', element: <Profile /> },
       { path: 'settings', element: <Settings /> },
