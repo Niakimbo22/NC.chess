@@ -6,6 +6,8 @@ import Home from './pages/Home';
 import PlayHub from './pages/PlayHub';
 import PlayLocal from './pages/PlayLocal';
 import PlayBot from './pages/PlayBot';
+import Settings from './pages/Settings';
+import Profile from './pages/Profile';
 import './index.css';
 
 function Soon({ title }: { title: string }) {
@@ -31,8 +33,8 @@ const router = createHashRouter([
       { path: 'lessons', element: <Soon title="🎓 Leçons" /> },
       { path: 'analysis', element: <Soon title="📊 Analyse" /> },
       { path: 'openings', element: <Soon title="📖 Ouvertures" /> },
-      { path: 'profile', element: <Soon title="👤 Profil" /> },
-      { path: 'settings', element: <Soon title="⚙️ Réglages" /> },
+      { path: 'profile', element: <Profile /> },
+      { path: 'settings', element: <Settings /> },
     ],
   },
 ]);
