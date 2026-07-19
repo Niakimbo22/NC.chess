@@ -61,6 +61,7 @@ export interface ChessGame {
   goTo: (index: number) => void;
   reset: (fen?: string) => void;
   startClock: () => void;
+  syncClock: (w: number, b: number) => void;
   chessRef: React.RefObject<Chess>;
 }
 
@@ -231,6 +232,10 @@ export function useChessGame(options: UseChessGameOptions): ChessGame {
 
   const startClock = useCallback(() => setClockRunning(true), []);
 
+  const syncClock = useCallback((w: number, b: number) => {
+    setClock((c) => (c ? { w, b } : c));
+  }, []);
+
   const viewFen = useMemo(() => {
     if (viewIndex === -2) return new Chess(startFen).fen();
     if (viewIndex < 0 || viewIndex >= history.length) return fen;
@@ -267,6 +272,7 @@ export function useChessGame(options: UseChessGameOptions): ChessGame {
     goTo,
     reset,
     startClock,
+    syncClock,
     chessRef,
   };
 }

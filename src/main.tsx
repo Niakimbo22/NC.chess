@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import PlayHub from './pages/PlayHub';
 import PlayLocal from './pages/PlayLocal';
 import PlayBot from './pages/PlayBot';
+import PlayFriend from './pages/PlayFriend';
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
 import './index.css';
@@ -28,7 +29,7 @@ const router = createHashRouter([
       { path: 'play', element: <PlayHub /> },
       { path: 'play/local', element: <PlayLocal /> },
       { path: 'play/bot', element: <PlayBot /> },
-      { path: 'play/friend', element: <Soon title="👥 Jouer entre amis" /> },
+      { path: 'play/friend', element: <PlayFriend /> },
       { path: 'puzzles', element: <Soon title="🧩 Puzzles" /> },
       { path: 'lessons', element: <Soon title="🎓 Leçons" /> },
       { path: 'analysis', element: <Soon title="📊 Analyse" /> },
