@@ -1,0 +1,43 @@
+import { NavLink, Outlet } from 'react-router-dom';
+import './app.css';
+
+const NAV_ITEMS = [
+  { to: '/', label: 'Accueil', icon: '🏠' },
+  { to: '/play', label: 'Jouer', icon: '♟️' },
+  { to: '/puzzles', label: 'Puzzles', icon: '🧩' },
+  { to: '/lessons', label: 'Leçons', icon: '🎓' },
+  { to: '/analysis', label: 'Analyse', icon: '📊' },
+  { to: '/openings', label: 'Ouvertures', icon: '📖' },
+  { to: '/profile', label: 'Profil', icon: '👤' },
+  { to: '/settings', label: 'Réglages', icon: '⚙️' },
+];
+
+export default function App() {
+  return (
+    <div className="app-layout">
+      <nav className="app-sidebar">
+        <NavLink to="/" className="app-logo">
+          <img src={`${import.meta.env.BASE_URL}pieces/cburnett/wN.svg`} alt="" />
+          <span>NC<em>.chess</em></span>
+        </NavLink>
+        {NAV_ITEMS.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.to === '/'}
+            className={({ isActive }) => `app-nav-item ${isActive ? 'active' : ''}`}
+          >
+            <span className="app-nav-icon">{item.icon}</span>
+            <span className="app-nav-label">{item.label}</span>
+          </NavLink>
+        ))}
+        <div className="app-sidebar-footer">
+          <span>100 % gratuit ✨</span>
+        </div>
+      </nav>
+      <main className="app-main">
+        <Outlet />
+      </main>
+    </div>
+  );
+}

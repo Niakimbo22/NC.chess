@@ -1,0 +1,33 @@
+.home { max-width: 1000px; margin: 0 auto; }
+
+.home-hero {
+  text-align: center;
+  padding: 36px 16px 24px;
+}
+.home-hero h1 { font-size: 34px; }
+.home-hero .brand em { color: var(--accent); font-style: normal; }
+.home-hero p { color: var(--text-dim); font-size: 17px; }
+
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  padding-bottom: 32px;
+}
+
+.home-card {
+  background: var(--bg-panel);
+  border-radius: 12px;
+  padding: 22px;
+  color: var(--text);
+  transition: transform 0.12s, background 0.15s;
+  border: 1px solid transparent;
+}
+.home-card:hover {
+  background: var(--bg-panel-2);
+  transform: translateY(-3px);
+  border-color: var(--border);
+}
+.home-card-icon { font-size: 34px; display: block; margin-bottom: 10px; }
+.home-card h3 { margin-bottom: 6px; }
+.home-card p { color: var(--text-dim); margin: 0; font-size: 14px; }

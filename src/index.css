@@ -1,0 +1,85 @@
+:root {
+  --bg: #161512;
+  --bg-panel: #21201d;
+  --bg-panel-2: #2b2926;
+  --bg-hover: #35332f;
+  --border: #3d3a36;
+  --text: #e8e6e3;
+  --text-dim: #9e9c99;
+  --accent: #81b64c;
+  --accent-hover: #93c65b;
+  --accent-dark: #5d9948;
+  --danger: #e02828;
+  --warning: #e8a33d;
+  --info: #3d9fe8;
+  --radius: 8px;
+  --sidebar-w: 190px;
+  font-family: 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', sans-serif;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  overscroll-behavior: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--bg-panel-2);
+  color: var(--text);
+  padding: 10px 16px;
+  font-size: 15px;
+  transition: background 0.15s, transform 0.05s;
+}
+button:hover { background: var(--bg-hover); }
+button:active { transform: translateY(1px); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+button.primary {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 4px 0 var(--accent-dark);
+}
+button.primary:hover { background: var(--accent-hover); }
+button.primary:active { box-shadow: 0 2px 0 var(--accent-dark); transform: translateY(2px); }
+
+button.danger { background: #7c2b2b; }
+button.danger:hover { background: #984040; }
+
+input, select {
+  font-family: inherit;
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-size: 15px;
+}
+input:focus, select:focus { outline: 2px solid var(--accent); border-color: transparent; }
+
+h1, h2, h3 { margin: 0 0 12px; }
+
+a { color: var(--accent); text-decoration: none; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+.panel {
+  background: var(--bg-panel);
+  border-radius: var(--radius);
+  padding: 16px;
+}

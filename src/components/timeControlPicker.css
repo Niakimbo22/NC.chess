@@ -1,0 +1,36 @@
+.tcp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.tcp-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 2px solid transparent;
+}
+.tcp-btn.selected { border-color: var(--accent); background: var(--bg-hover); }
+.tcp-icon { font-size: 20px; }
+
+.tcp-custom {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  margin-top: 12px;
+  background: var(--bg-panel-2);
+  padding: 12px;
+  border-radius: var(--radius);
+}
+.tcp-custom label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.tcp-custom input { width: 90px; }
