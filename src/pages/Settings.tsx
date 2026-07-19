@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { useSettings } from '../store/settings';
 import { BOARD_THEMES, PIECE_SETS, SOUND_PACKS, pieceUrl } from '../themes/boardThemes';
 import { playSound } from '../audio/sounds';
+import { listFrenchVoices, resetVoiceCache, speak } from '../coach/voice';
 import './settings.css';
 
 export default function Settings() {
@@ -106,9 +108,50 @@ export default function Settings() {
       <section className="panel">
         <h2>🗣️ Coach</h2>
         <Toggle label="Voix du coach (synthèse vocale)" checked={s.coachVoice} onChange={(v) => s.set({ coachVoice: v })} />
+        {s.coachVoice && <VoicePicker />}
       </section>
 
       <button className="danger" onClick={() => s.reset()}>Réinitialiser tous les réglages</button>
+    </div>
+  );
+}
+
+function VoicePicker() {
+  const s = useSettings();
+  const [voices, setVoices] = useState(listFrenchVoices());
+
+  useEffect(() => {
+    // Les voix arrivent parfois après le chargement de la page
+    const refresh = () => setVoices(listFrenchVoices());
+    refresh();
+    if ('speechSynthesis' in window) {
+      speechSynthesis.addEventListener('voiceschanged', refresh);
+      return () => speechSynthesis.removeEventListener('voiceschanged', refresh);
+    }
+  }, []);
+
+  if (voices.length === 0) {
+    return <p style={{ color: 'var(--text-dim)', fontSize: 13 }}>Aucune voix française détectée sur ce système.</p>;
+  }
+
+  return (
+    <div className="slider-row" style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+      <span>Voix :</span>
+      <select
+        style={{ flex: 1 }}
+        value={s.coachVoiceName ?? ''}
+        onChange={(e) => {
+          s.set({ coachVoiceName: e.target.value || null });
+          resetVoiceCache();
+          setTimeout(() => speak('Bonjour ! Je suis ton coach d’échecs.'), 100);
+        }}
+      >
+        <option value="">Automatique (meilleure voix détectée)</option>
+        {voices.map((v) => (
+          <option key={v.name} value={v.name}>{v.name}</option>
+        ))}
+      </select>
+      <button onClick={() => speak('Bonjour ! Je suis ton coach d’échecs. En avant pour la victoire !')}>▶ Tester</button>
     </div>
   );
 }

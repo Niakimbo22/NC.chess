@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import OpeningLabel from '../components/OpeningLabel';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Color } from 'chess.js';
 import Chessboard from '../components/board/Chessboard';
@@ -417,6 +418,7 @@ function FriendGame({
             </div>
           </div>
         )}
+        <OpeningLabel history={game.history} />
         <MoveList history={game.history} viewIndex={game.viewIndex} onSelect={game.goTo} />
         <NavButtons historyLength={game.history.length} viewIndex={game.viewIndex} onGoTo={game.goTo} />
         <div className="game-actions">

@@ -10,17 +10,10 @@ import PlayFriend from './pages/PlayFriend';
 import Settings from './pages/Settings';
 import Analysis from './pages/Analysis';
 import Puzzles from './pages/Puzzles';
+import Lessons from './pages/Lessons';
+import Openings from './pages/Openings';
 import Profile from './pages/Profile';
 import './index.css';
-
-function Soon({ title }: { title: string }) {
-  return (
-    <div style={{ textAlign: 'center', paddingTop: 80 }}>
-      <h1>{title}</h1>
-      <p style={{ color: 'var(--text-dim)' }}>Bientôt disponible — en construction 🚧</p>
-    </div>
-  );
-}
 
 const router = createHashRouter([
   {
@@ -33,9 +26,9 @@ const router = createHashRouter([
       { path: 'play/bot', element: <PlayBot /> },
       { path: 'play/friend', element: <PlayFriend /> },
       { path: 'puzzles', element: <Puzzles /> },
-      { path: 'lessons', element: <Soon title="🎓 Leçons" /> },
+      { path: 'lessons', element: <Lessons /> },
       { path: 'analysis', element: <Analysis /> },
-      { path: 'openings', element: <Soon title="📖 Ouvertures" /> },
+      { path: 'openings', element: <Openings /> },
       { path: 'profile', element: <Profile /> },
       { path: 'settings', element: <Settings /> },
     ],

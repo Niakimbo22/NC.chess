@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import OpeningLabel from '../components/OpeningLabel';
 import { useNavigate } from 'react-router-dom';
 import type { Color } from 'chess.js';
 import Chessboard from '../components/board/Chessboard';
@@ -109,6 +110,7 @@ function LocalGame({
         />
       </div>
       <div className="game-side-col">
+        <OpeningLabel history={game.history} />
         <MoveList history={game.history} viewIndex={game.viewIndex} onSelect={(i) => game.goTo(i)} />
         <NavButtons historyLength={game.history.length} viewIndex={game.viewIndex} onGoTo={game.goTo} />
         <div className="game-actions">

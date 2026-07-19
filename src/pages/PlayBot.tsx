@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import OpeningLabel from '../components/OpeningLabel';
 import { useNavigate } from 'react-router-dom';
 import type { Color, Square } from 'chess.js';
 import Chessboard, { type Arrow } from '../components/board/Chessboard';
@@ -273,6 +274,7 @@ function BotGame({
       <div className="game-side-col">
         {botMessage && <div className="bot-message">{botMessage}</div>}
         {!engineReady && <div className="bot-message">Chargement du moteur… ⏳</div>}
+        <OpeningLabel history={game.history} />
         <MoveList history={game.history} viewIndex={game.viewIndex} onSelect={game.goTo} />
         <NavButtons historyLength={game.history.length} viewIndex={game.viewIndex} onGoTo={game.goTo} />
         <div className="game-actions">

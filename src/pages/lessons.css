@@ -1,0 +1,71 @@
+.lessons-page { max-width: 900px; margin: 0 auto; padding-bottom: 40px; }
+
+.lesson-category { margin-top: 20px; font-size: 18px; color: var(--text-dim); }
+
+.lesson-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.lesson-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  text-align: left;
+  padding: 16px;
+  background: var(--bg-panel);
+  border: 1px solid transparent;
+}
+.lesson-card:hover { border-color: var(--accent); }
+.lesson-icon { font-size: 28px; }
+.lesson-title { font-weight: 800; font-size: 16px; }
+.lesson-done { color: var(--accent); }
+.lesson-desc { color: var(--text-dim); font-size: 13px; font-weight: 400; }
+.lesson-steps { color: var(--text-dim); font-size: 12px; margin-top: auto; }
+
+.lesson-layout {
+  display: grid;
+  grid-template-columns: minmax(0, calc(100vh - 200px)) minmax(300px, 380px);
+  gap: 20px;
+  justify-content: center;
+  align-items: start;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+@media (max-width: 900px) {
+  .lesson-layout { grid-template-columns: 1fr; }
+}
+
+.lesson-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+}
+.lesson-header .lesson-icon { font-size: 22px; }
+.lesson-progress { margin-left: auto; color: var(--text-dim); font-size: 13px; }
+
+.lesson-progressbar {
+  height: 8px;
+  background: var(--bg-panel-2);
+  border-radius: 4px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+.lesson-progressbar div {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.4s;
+}
+
+.lesson-side-col { display: flex; flex-direction: column; gap: 10px; }
+
+.lesson-coach { margin-top: 0; align-items: flex-start; }
+.lesson-coach p { font-size: 15px; line-height: 1.5; }
+
+.lesson-msg { border-radius: var(--radius); padding: 8px 10px; font-size: 14px; }
+.lesson-msg.hint { background: rgba(232, 163, 61, 0.15); border-left: 3px solid var(--warning); }
+.lesson-msg.success { background: rgba(129, 182, 76, 0.15); border-left: 3px solid var(--accent); }
