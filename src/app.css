@@ -75,6 +75,12 @@
 .app-nav-icon { font-size: 18px; width: 24px; text-align: center; transition: transform 0.15s ease; }
 .app-nav-item:hover .app-nav-icon { transform: scale(1.15); }
 
+/* Bouton « Plus » : uniquement sur mobile (desktop affiche tout dans la sidebar). */
+.app-nav-more { display: none; border: none; background: none; font-family: inherit; cursor: pointer; }
+
+/* ---- Feuille « Plus » (mobile) ---- */
+.nav-sheet-backdrop { display: none; }
+
 .app-sidebar-footer {
   margin-top: auto;
   padding: 12px;
@@ -140,8 +146,72 @@
   }
   .app-nav-icon { width: auto; font-size: 20px; }
   .app-sidebar-footer { display: none; }
+
+  /* Secondaires rangés dans la feuille « Plus » → hors de la barre du bas. */
+  .app-nav-item--secondary { display: none; }
+  .app-nav-more { display: flex; }
+  .app-nav-more.active { color: var(--gold-light); }
+
+  /* Feuille « Plus » : voile + panneau glissant depuis le bas. */
+  .nav-sheet-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: rgba(0, 0, 0, 0.5);
+    animation: sheetFade 0.2s ease;
+  }
+  .nav-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 51;
+    background: linear-gradient(180deg, var(--bg-panel), #1a1916);
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    padding: 8px 12px calc(16px + env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.45);
+    animation: sheetUp 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .nav-sheet-handle {
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    margin: 4px auto 8px;
+  }
+  .nav-sheet-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 12px;
+    border-radius: var(--radius);
+    color: var(--text);
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .nav-sheet-item .app-nav-icon { width: 24px; font-size: 20px; }
+  .nav-sheet-item:active { background: var(--bg-hover); }
+  .nav-sheet-item.active {
+    background: linear-gradient(90deg, rgba(212, 175, 55, 0.16), rgba(212, 175, 55, 0.03));
+    color: var(--gold-light);
+  }
+  .nav-sheet-sep { height: 1px; background: var(--border); margin: 6px 4px; }
   .app-main { padding: 10px; -webkit-overflow-scrolling: touch; }
   .game-layout { grid-template-columns: 1fr; }
   .game-side-col { height: auto; position: static; }
   .home-hero h1 { font-size: 26px; }
+}
+
+@keyframes sheetFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }

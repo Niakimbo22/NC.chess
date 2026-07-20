@@ -1,0 +1,25 @@
+.share-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--gold-light);
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: var(--radius);
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+.share-btn:hover { background: rgba(212, 175, 55, 0.16); transform: translateY(-1px); }
+.share-btn-icon { font-size: 15px; }
+
+/* Variante dans la feuille « Plus » (mobile) : pleine largeur, plus aérée. */
+.share-btn--sheet {
+  font-size: 15px;
+  padding: 14px;
+  justify-content: flex-start;
+}
