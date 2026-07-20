@@ -1,0 +1,31 @@
+name: Déploiement GitHub Pages
+
+# Reconstruit et publie l'app à chaque push sur la branche de dev.
+on:
+  push:
+    branches: [claude/chess-app-premium-free-03ntc2]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      # Publie le contenu de dist/ sur la branche gh-pages (créée automatiquement)
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
