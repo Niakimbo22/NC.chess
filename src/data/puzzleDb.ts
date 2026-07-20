@@ -107,6 +107,56 @@ export function pickPuzzle(pool: Puzzle[], opts: PickOptions): Puzzle | null {
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
+/** Explications pédagogiques par thème tactique, affichées à la demande */
+export const THEME_EXPLANATIONS: Record<string, string> = {
+  mateIn1: 'Mat immédiat : le roi adverse n’a plus aucune case ni aucune parade.',
+  mateIn2: 'Une suite de deux coups forcés, chacun imposant la réponse adverse, mène droit au mat.',
+  mateIn3: 'Une combinaison de trois coups forcés débouche inévitablement sur le mat.',
+  doubleCheck: 'Échec double : deux pièces attaquent le roi en même temps. Seul un déplacement du roi peut parer les deux menaces à la fois.',
+  backRankMate: 'Mat du couloir : le roi est bloqué par ses propres pions sur la dernière rangée, sans case de fuite.',
+  smotheredMate: 'Mat à l’étouffée : le roi est encerclé par ses propres pièces, incapable de fuir le cavalier qui donne l’échec.',
+  fork: 'Fourchette : un même coup attaque deux pièces adverses (ou plus) simultanément. L’adversaire ne peut en sauver qu’une seule.',
+  pin: 'Clouage : la pièce visée ne peut pas bouger sans exposer une pièce plus précieuse (souvent le roi) juste derrière elle.',
+  skewer: 'Enfilade : comme un clouage inversé — la pièce la plus précieuse est attaquée en premier, elle doit fuir et livre celle qui était derrière.',
+  discoveredAttack: 'Attaque à la découverte : en déplaçant une pièce, on révèle l’attaque d’une autre pièce restée cachée derrière elle.',
+  xRayAttack: 'Attaque à rayons X : une pièce attaque à travers une autre, qui ne protège la cible qu’en apparence.',
+  deflection: 'Déviation : on force une pièce défensive à quitter la case ou la ligne qu’elle protégeait, pour porter le coup décisif ensuite.',
+  attraction: 'Attraction : un sacrifice attire une pièce adverse (souvent le roi) sur une case défavorable, préparant la suite.',
+  clearance: 'Dégagement : une pièce se déplace pour libérer une case ou une ligne, permettant à une autre pièce de porter le coup décisif.',
+  interference: 'Interception : une pièce s’intercale sur la ligne qui reliait deux pièces adverses, coupant leur coordination.',
+  capturingDefender: 'On élimine d’abord la pièce qui défendait la cible, avant de porter le coup décisif sur celle-ci.',
+  trappedPiece: 'Pièce piégée : une pièce adverse n’a plus aucune case sûre pour s’échapper.',
+  hangingPiece: 'Pièce en prise : une pièce adverse est laissée sans protection suffisante — il suffit de la capturer.',
+  sacrifice: 'Sacrifice : on donne volontairement du matériel pour obtenir un avantage décisif (mat, gain supérieur, attaque irrésistible…).',
+  quietMove: 'Coup tranquille : sans échec ni capture, mais il prépare une menace que l’adversaire ne peut pas parer.',
+  intermezzo: 'Coup intermédiaire (zwischenzug) : au lieu de répondre directement à la menace, on place d’abord un coup plus fort qui change la donne.',
+  zugzwang: 'Zugzwang : l’adversaire serait mieux s’il pouvait « passer » — le moindre coup qu’il joue aggrave sa position.',
+  promotion: 'Promotion : un pion atteint la dernière rangée et se transforme en une pièce plus forte, généralement une dame.',
+  underPromotion: 'Sous-promotion : promouvoir en cavalier, tour ou fou (plutôt qu’en dame) est ici le seul coup gagnant.',
+  enPassant: 'Prise en passant : un pion capture le pion adverse qui vient d’avancer de deux cases, comme s’il n’avait avancé que d’une.',
+  castling: 'Le roque intervient dans la solution : il met le roi en sécurité ou active brusquement la tour.',
+  exposedKing: 'Le roi adverse est exposé, ce qui rend possible une attaque directe contre lui.',
+  advancedPawn: 'Un pion très avancé devient une menace décisive qu’il faut exploiter immédiatement.',
+  defensiveMove: 'Il faut d’abord trouver le coup défensif qui neutralise la menace adverse avant de reprendre l’initiative.',
+};
+
+/** Thèmes tactiques concrets, du plus spécifique au plus général : sert à choisir
+ *  quelle explication afficher en priorité quand un puzzle a plusieurs thèmes. */
+const THEME_PRIORITY = [
+  'mateIn1', 'mateIn2', 'mateIn3', 'smotheredMate', 'backRankMate', 'doubleCheck',
+  'fork', 'skewer', 'pin', 'discoveredAttack', 'xRayAttack', 'deflection', 'attraction',
+  'clearance', 'interference', 'capturingDefender', 'trappedPiece', 'hangingPiece',
+  'sacrifice', 'intermezzo', 'zugzwang', 'quietMove', 'underPromotion', 'promotion',
+  'enPassant', 'castling', 'advancedPawn', 'defensiveMove', 'exposedKing',
+];
+
+/** Construit une explication lisible du motif tactique principal d'un puzzle. */
+export function explainPuzzle(puzzle: Puzzle): string {
+  const theme = THEME_PRIORITY.find((t) => puzzle.themes.includes(t));
+  if (theme) return THEME_EXPLANATIONS[theme];
+  return 'Cherche le coup qui crée une menace que l’adversaire ne peut pas parer sans perdre du matériel.';
+}
+
 /** Puzzle quotidien : déterministe pour une date donnée */
 export function dailyPuzzle(pool: Puzzle[], date = new Date()): Puzzle {
   const key = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();

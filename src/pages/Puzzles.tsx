@@ -5,6 +5,7 @@ import {
   loadPuzzles,
   pickPuzzle,
   dailyPuzzle,
+  explainPuzzle,
   THEME_FR,
   FILTERABLE_THEMES,
   type Puzzle,
@@ -194,6 +195,37 @@ function usePuzzleSolver(puzzle: Puzzle | null, cb: SolverCallbacks) {
   return { fen, state, playerColor, lastMove, wrongSquare, onMove, showSolution, hint, hintData, mistakeMade };
 }
 
+/** Petite explosion de confettis dorés/verts, jouée une fois à chaque passage à "solved" */
+function PuzzleConfetti({ trigger }: { trigger: boolean }) {
+  const [burstId, setBurstId] = useState(0);
+  const wasTriggered = useRef(false);
+
+  useEffect(() => {
+    if (trigger && !wasTriggered.current) setBurstId((id) => id + 1);
+    wasTriggered.current = trigger;
+  }, [trigger]);
+
+  if (!burstId) return null;
+
+  const pieces = Array.from({ length: 16 }, (_, i) => i);
+  return (
+    <div className="puzzle-confetti" key={burstId}>
+      {pieces.map((i) => {
+        const angle = (360 / pieces.length) * i + (Math.random() * 18 - 9);
+        const distance = 55 + Math.random() * 65;
+        const dx = Math.cos((angle * Math.PI) / 180) * distance;
+        const dy = Math.sin((angle * Math.PI) / 180) * distance;
+        const style = {
+          '--dx': `${dx}px`,
+          '--dy': `${dy}px`,
+          animationDelay: `${Math.random() * 0.12}s`,
+        } as React.CSSProperties;
+        return <span key={i} className={`puzzle-confetti-piece ${i % 2 === 0 ? 'gold' : 'green'}`} style={style} />;
+      })}
+    </div>
+  );
+}
+
 function PuzzleBoardPanel({
   solver,
   children,
@@ -213,6 +245,7 @@ function PuzzleBoardPanel({
           markedSquares={[...(solver.wrongSquare ? [solver.wrongSquare] : []), ...solver.hintData.marked]}
           arrows={solver.hintData.arrows}
         />
+        <PuzzleConfetti trigger={solver.state === 'solved'} />
       </div>
       <div className="puzzle-side">{children}</div>
     </div>
@@ -227,6 +260,7 @@ function Training({ pool }: { pool: Puzzle[] }) {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [streak, setStreak] = useState(0);
   const [lastDelta, setLastDelta] = useState<number | null>(null);
+  const [showExplain, setShowExplain] = useState(false);
   const seenRef = useRef(new Set<string>());
   const scoredRef = useRef(false);
 
@@ -236,6 +270,7 @@ function Training({ pool }: { pool: Puzzle[] }) {
       seenRef.current.add(p.id);
       scoredRef.current = false;
       setLastDelta(null);
+      setShowExplain(false);
       setPuzzle(p);
     }
   }, [pool, theme]);
@@ -294,6 +329,14 @@ function Training({ pool }: { pool: Puzzle[] }) {
             </div>
             {(solver.state !== 'playing') && (
               <p style={{ color: 'var(--text-dim)', fontSize: 13 }}>Difficulté du puzzle : {puzzle.rating}</p>
+            )}
+            {solver.state !== 'playing' && (
+              <button onClick={() => setShowExplain((s) => !s)}>
+                {showExplain ? '❓ Masquer l’explication' : '❓ Pourquoi ce coup ?'}
+              </button>
+            )}
+            {showExplain && solver.state !== 'playing' && (
+              <p className="puzzle-explain">{explainPuzzle(puzzle)}</p>
             )}
           </>
         )}
@@ -440,6 +483,7 @@ function Daily({ pool }: { pool: Puzzle[] }) {
   const puzzle = useMemo(() => dailyPuzzle(pool), [pool]);
   const todayKey = new Date().toISOString().slice(0, 10);
   const [done, setDone] = useState(() => localStorage.getItem('ncchess-daily') === todayKey);
+  const [showExplain, setShowExplain] = useState(false);
 
   const solver = usePuzzleSolver(puzzle, {
     onSolved: () => {
@@ -454,13 +498,23 @@ function Daily({ pool }: { pool: Puzzle[] }) {
         <h2>📅 Puzzle du jour</h2>
         <p style={{ color: 'var(--text-dim)' }}>{new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
         {done && solver.state !== 'playing' ? (
-          <p className="puzzle-goal">✅ Puzzle du jour réussi ! Reviens demain.</p>
+          <p className="puzzle-goal solved">✅ Puzzle du jour réussi ! Reviens demain.</p>
         ) : done ? (
           <p className="puzzle-goal">Déjà résolu aujourd'hui — mais tu peux le refaire !</p>
         ) : (
-          <p className="puzzle-goal">{solver.playerColor === 'w' ? 'Les blancs' : 'Les noirs'} jouent et gagnent.</p>
+          <p className={`puzzle-goal ${solver.state === 'failed' ? 'failed' : ''}`}>
+            {solver.playerColor === 'w' ? 'Les blancs' : 'Les noirs'} jouent et gagnent.
+          </p>
         )}
         <p style={{ fontSize: 13, color: 'var(--text-dim)' }}>Difficulté : {puzzle.rating}</p>
+        {solver.state !== 'playing' && (
+          <button onClick={() => setShowExplain((s) => !s)}>
+            {showExplain ? '❓ Masquer l’explication' : '❓ Pourquoi ce coup ?'}
+          </button>
+        )}
+        {showExplain && solver.state !== 'playing' && (
+          <p className="puzzle-explain">{explainPuzzle(puzzle)}</p>
+        )}
       </div>
       <div className="game-actions">
         {solver.state === 'playing' && (
