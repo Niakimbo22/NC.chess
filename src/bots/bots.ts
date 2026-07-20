@@ -17,7 +17,13 @@ export interface Bot {
     movetime?: number;
     /** Température de sélection : 0 = toujours le meilleur, élevé = joue des coups faibles */
     temperature?: number;
-    /** Probabilité de jouer un coup légal aléatoire (gaffes des débutants) */
+    /**
+     * Probabilité de « vision courte » : jouer le meilleur coup à 1 coup
+     * d'avance seulement. Reproduit un oubli humain (rater une tactique en
+     * deux temps, foncer sur du matériel) sans jamais jouer un coup absurde.
+     */
+    blunderChance?: number;
+    /** Probabilité d'un vrai coup au hasard (réservé aux tout débutants). */
     randomMoveChance?: number;
   };
 }
@@ -26,38 +32,38 @@ export const BOTS: Bot[] = [
   {
     id: 'nino', name: 'Nino', elo: 250, avatar: '🐣',
     description: 'Il vient d’apprendre comment bougent les pièces. Parfait pour débuter.',
-    style: 'Joue presque au hasard',
-    settings: { skill: 0, depth: 1, temperature: 500, randomMoveChance: 0.45 },
+    style: 'Découvre le jeu',
+    settings: { skill: 0, depth: 2, temperature: 500, blunderChance: 0.45, randomMoveChance: 0.15 },
   },
   {
     id: 'lea', name: 'Léa', elo: 400, avatar: '🐰',
     description: 'Elle capture tout ce qui traîne mais oublie de protéger ses pièces.',
     style: 'Gourmande et étourdie',
-    settings: { skill: 0, depth: 2, temperature: 350, randomMoveChance: 0.25 },
+    settings: { skill: 0, depth: 2, temperature: 350, blunderChance: 0.35, randomMoveChance: 0.06 },
   },
   {
     id: 'max', name: 'Max', elo: 600, avatar: '🐶',
     description: 'Il connaît les valeurs des pièces et adore donner des échecs.',
     style: 'Enthousiaste mais brouillon',
-    settings: { skill: 1, depth: 3, temperature: 250, randomMoveChance: 0.12 },
+    settings: { skill: 1, depth: 3, temperature: 250, blunderChance: 0.22 },
   },
   {
     id: 'zoe', name: 'Zoé', elo: 800, avatar: '🐱',
     description: 'Elle développe ses pièces et fait attention aux menaces simples.',
     style: 'Prudente',
-    settings: { skill: 2, depth: 4, temperature: 180, randomMoveChance: 0.05 },
+    settings: { skill: 2, depth: 4, temperature: 180, blunderChance: 0.12 },
   },
   {
     id: 'tom', name: 'Tom', elo: 1000, avatar: '🎒',
     description: 'Le champion de son collège. Il repère les fourchettes et les clouages.',
     style: 'Tacticien en herbe',
-    settings: { skill: 3, depth: 5, temperature: 120, randomMoveChance: 0.02 },
+    settings: { skill: 3, depth: 5, temperature: 120, blunderChance: 0.06 },
   },
   {
     id: 'sacha', name: 'Sacha', elo: 1200, avatar: '🎯',
     description: 'Un joueur de club solide qui punit les gaffes sans pitié.',
     style: 'Solide',
-    settings: { skill: 5, depth: 6, temperature: 80 },
+    settings: { skill: 5, depth: 6, temperature: 80, blunderChance: 0.03 },
   },
   {
     id: 'camille', name: 'Camille', elo: 1400, avatar: '🐴',
@@ -122,7 +128,8 @@ export async function configureEngineForBot(engine: Engine, bot: Bot): Promise<v
 export async function pickBotMove(engine: Engine, bot: Bot, fen: string): Promise<string> {
   const s = bot.settings;
 
-  // Gaffe aléatoire des petits niveaux : un coup légal au hasard
+  // 1) Vrai coup au hasard (tout petits niveaux uniquement) : le débutant qui
+  //    « donne » une pièce sans raison.
   if (s.randomMoveChance && Math.random() < s.randomMoveChance) {
     const chess = new Chess(fen);
     const moves = chess.moves({ verbose: true });
@@ -130,6 +137,16 @@ export async function pickBotMove(engine: Engine, bot: Bot, fen: string): Promis
     return move.from + move.to + (move.promotion ?? '');
   }
 
+  // 2) Vision courte : meilleur coup à 1 coup d'avance seulement. La recherche
+  //    à profondeur 1 (avec quiescence) évite les pièces en prise immédiate
+  //    mais rate les tactiques en deux temps — exactement le profil d'erreur
+  //    d'un joueur amateur, bien plus crédible qu'un coup aléatoire.
+  if (s.blunderChance && Math.random() < s.blunderChance) {
+    const shallow = await engine.search(fen, { depth: 1 });
+    if (shallow.best && shallow.best !== '(none)') return shallow.best;
+  }
+
+  // 3) Jeu normal, à la profondeur du bot.
   const multipv = s.temperature ? 5 : 1;
   const result = await engine.search(fen, {
     depth: s.depth,
