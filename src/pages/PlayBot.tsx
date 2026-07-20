@@ -9,6 +9,7 @@ import { TIME_CONTROLS, type TimeControl } from '../game/timeControls';
 import { useChessGame } from '../game/useChessGame';
 import { Engine, evalToWhiteCp } from '../engine/engine';
 import { BOTS, configureEngineForBot, pickBotMove, botThinkDelay, type Bot } from '../bots/bots';
+import { botLine, type ChatCategory } from '../bots/chatter';
 import { useProfile } from '../store/profile';
 import { saveGameToHistory } from '../store/gameHistory';
 import { playSound } from '../audio/sounds';
@@ -108,6 +109,17 @@ function BotSetup({ onStart }: { onStart: (c: BotConfig) => void }) {
   );
 }
 
+// Balance matérielle depuis un FEN (positif = les Blancs mènent), en points.
+const PIECE_VALUE: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9 };
+function materialBalance(fen: string): number {
+  let bal = 0;
+  for (const ch of fen.split(' ')[0]) {
+    const v = PIECE_VALUE[ch.toLowerCase()];
+    if (v) bal += ch === ch.toLowerCase() ? -v : v;
+  }
+  return bal;
+}
+
 function BotGame({
   config,
   onExit,
@@ -130,6 +142,19 @@ function BotGame({
   const [eloChange, setEloChange] = useState<number | null>(null);
   const [botMessage, setBotMessage] = useState<string | null>(null);
   const recordedRef = useRef(false);
+  const msgTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSayPlyRef = useRef(-10);
+
+  // Fait « parler » le bot : affiche une réplique qui s'efface toute seule.
+  const say = useCallback((category: ChatCategory) => {
+    const line = botLine(bot.id, category);
+    if (!line) return;
+    setBotMessage(line);
+    if (msgTimerRef.current) clearTimeout(msgTimerRef.current);
+    msgTimerRef.current = setTimeout(() => setBotMessage(null), 4500);
+  }, [bot.id]);
+
+  useEffect(() => () => { if (msgTimerRef.current) clearTimeout(msgTimerRef.current); }, []);
 
   const game = useChessGame({
     timeControl: tc,
@@ -185,7 +210,7 @@ function BotGame({
     const fen = game.fen;
     Promise.all([
       pickBotMove(engine, bot, fen),
-      new Promise((r) => setTimeout(r, botThinkDelay(bot))),
+      new Promise((r) => setTimeout(r, botThinkDelay(bot, game.clock?.[botColor], game.history.length))),
     ])
       .then(([uci]) => {
         thinkingRef.current = false;
@@ -237,6 +262,56 @@ function BotGame({
     game.undo(Math.min(count, game.history.length));
   }, [game, playerColor]);
 
+  // Salutation en début de partie.
+  useEffect(() => {
+    if (engineReady && game.history.length === 0 && !game.result) say('start');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [engineReady]);
+
+  // Réactions du bot au fil des coups (capture, échec, avantage, difficulté).
+  useEffect(() => {
+    const h = game.history;
+    if (h.length === 0 || game.result) return;
+    const last = h[h.length - 1];
+    const ply = h.length;
+    const inCheck = game.chessRef.current.inCheck();
+
+    const maybe = (category: ChatCategory, prob: number) => {
+      if (ply - lastSayPlyRef.current < 4) return; // pas de bavardage à chaque coup
+      if (Math.random() > prob) return;
+      lastSayPlyRef.current = ply;
+      say(category);
+    };
+
+    if (last.color === botColor) {
+      // Le bot vient de jouer.
+      if (inCheck) maybe('check', 0.55);
+      else if (last.captured) maybe('capture', 0.4);
+      else {
+        const botAhead = botColor === 'w' ? materialBalance(game.fen) : -materialBalance(game.fen);
+        if (botAhead >= 3) maybe('advantage', 0.25);
+      }
+    } else {
+      // Le joueur vient de jouer : le bot réagit s'il est bousculé.
+      if (inCheck) maybe('trouble', 0.5); // joueur met le bot en échec
+      else if (last.captured) maybe('trouble', 0.35); // joueur prend une pièce du bot
+      else {
+        const botBehind = botColor === 'w' ? -materialBalance(game.fen) : materialBalance(game.fen);
+        if (botBehind >= 3) maybe('trouble', 0.2);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game.history.length]);
+
+  // Mot de la fin.
+  useEffect(() => {
+    if (!game.result) return;
+    const category: ChatCategory =
+      game.result.winner === null ? 'draw' : game.result.winner === botColor ? 'win' : 'loss';
+    say(category);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game.result]);
+
   const isLive = game.viewIndex < 0;
   const playerName = profile.pseudo;
 
@@ -253,6 +328,12 @@ function BotGame({
           clockActive={game.clockRunning && game.turn === botColor && !game.result}
           subtitle={botThinking ? 'réfléchit…' : undefined}
         />
+        {botMessage && (
+          <div className="bot-speech" key={botMessage}>
+            <span className="bot-speech-avatar">{bot.avatar}</span>
+            <span className="bot-speech-text">{botMessage}</span>
+          </div>
+        )}
         <Chessboard
           fen={game.viewFen}
           orientation={playerColor}
@@ -272,7 +353,6 @@ function BotGame({
         />
       </div>
       <div className="game-side-col">
-        {botMessage && <div className="bot-message">{botMessage}</div>}
         {!engineReady && <div className="bot-message">Chargement du moteur… ⏳</div>}
         <OpeningLabel history={game.history} />
         <MoveList history={game.history} viewIndex={game.viewIndex} onSelect={game.goTo} />

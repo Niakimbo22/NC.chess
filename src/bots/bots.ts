@@ -159,8 +159,26 @@ export async function pickBotMove(engine: Engine, bot: Bot, fen: string): Promis
   return result.best;
 }
 
-/** Temps de « réflexion » simulé pour rendre le bot plus humain */
-export function botThinkDelay(bot: Bot): number {
-  const base = bot.elo < 1000 ? 350 : 500;
-  return base + Math.random() * 900;
+/**
+ * Temps de « réflexion » simulé pour rendre le bot plus humain : il ne doit
+ * pas répondre instantanément. La durée varie autour d'une base liée à sa
+ * force, avec de temps en temps un coup rapide (réflexe) ou une longue
+ * réflexion. Bornée par la pendule pour ne pas flageller le bot en blitz.
+ */
+export function botThinkDelay(bot: Bot, remainingMs?: number, ply?: number): number {
+  const base = bot.elo < 800 ? 700 : bot.elo < 1600 ? 1000 : 1300;
+  let delay = base + Math.random() * base; // base .. 2×base
+
+  // Les premiers coups (théorie d'ouverture) sont joués plus vite.
+  if (ply !== undefined && ply < 6) delay *= 0.45;
+
+  // Rythme irrégulier : ~12 % de longues réflexions, ~22 % de coups réflexes.
+  const r = Math.random();
+  if (r < 0.12) delay *= 2.2;
+  else if (r < 0.34) delay *= 0.3;
+
+  // Ne jamais consommer plus de ~8 % du temps restant sur un coup.
+  if (remainingMs && remainingMs > 0) delay = Math.min(delay, remainingMs * 0.08);
+
+  return Math.max(250, Math.round(delay));
 }
