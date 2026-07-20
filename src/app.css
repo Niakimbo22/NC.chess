@@ -88,6 +88,13 @@
   font-size: 12px;
   text-align: center;
 }
+.app-version {
+  margin-top: 8px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  opacity: 0.6;
+}
 
 .app-main {
   flex: 1;

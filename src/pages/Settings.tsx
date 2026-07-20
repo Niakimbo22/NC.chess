@@ -3,6 +3,7 @@ import { useSettings } from '../store/settings';
 import { BOARD_THEMES, PIECE_SETS, SOUND_PACKS, pieceUrl } from '../themes/boardThemes';
 import { playSound } from '../audio/sounds';
 import { listFrenchVoices, resetVoiceCache, speak } from '../coach/voice';
+import { APP_VERSION } from '../version';
 import './settings.css';
 
 export default function Settings() {
@@ -112,6 +113,18 @@ export default function Settings() {
       </section>
 
       <button className="danger" onClick={() => s.reset()}>Réinitialiser tous les réglages</button>
+
+      <section className="panel about-panel">
+        <h2>ℹ️ À propos</h2>
+        <div className="about-row">
+          <span>Version</span>
+          <span className="about-version">v{APP_VERSION}</span>
+        </div>
+        <p className="about-note">
+          NC<em>.chess</em> — entraînement d’échecs, 100 % gratuit. Tout tourne
+          en local sur ton appareil.
+        </p>
+      </section>
     </div>
   );
 }

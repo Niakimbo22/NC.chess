@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import InstallPwaButton from './components/InstallPwaButton';
 import ShareButton from './components/ShareButton';
 import { useSwipeNav } from './nav/useSwipeNav';
+import { APP_VERSION } from './version';
 import './app.css';
 
 // Onglets principaux (barre du bas sur mobile, en haut sur desktop).
@@ -79,6 +80,7 @@ export default function App() {
         <div className="app-sidebar-footer">
           <ShareButton />
           <InstallPwaButton />
+          <div className="app-version">v{APP_VERSION}</div>
         </div>
       </nav>
 

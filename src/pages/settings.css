@@ -83,3 +83,18 @@
   color: var(--text-dim);
 }
 .slider-row input { accent-color: var(--accent); }
+
+/* ---- À propos ---- */
+.about-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+}
+.about-version {
+  font-weight: 700;
+  color: var(--gold-light);
+  letter-spacing: 0.5px;
+}
+.about-note { color: var(--text-dim); font-size: 13px; margin: 10px 0 0; }
+.about-note em { font-style: normal; color: var(--gold-light); }
