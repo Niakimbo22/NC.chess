@@ -21,6 +21,8 @@ export interface PlayerInfo {
   name: string;
   avatar: string;
   elo: number;
+  /** Code ami, pour pouvoir s'ajouter mutuellement après la partie. */
+  code?: string;
 }
 
 /**
@@ -67,7 +69,8 @@ export interface SessionEvents {
  * le broker public PeerJS pour l'établissement de la connexion WebRTC.
  */
 export class P2PSession {
-  readonly role: 'host' | 'guest';
+  /** Rôle résolu : en mode 'auto' il devient 'host' ou 'guest' selon la course. */
+  private _role: 'host' | 'guest';
   readonly code: string;
   private peer: Peer | null = null;
   private conn: DataConnection | null = null;
@@ -75,20 +78,41 @@ export class P2PSession {
   events: SessionEvents;
   private closed = false;
 
-  constructor(role: 'host' | 'guest', code: string, events: SessionEvents) {
-    this.role = role;
+  constructor(role: 'host' | 'guest' | 'auto', code: string, events: SessionEvents) {
     this.code = code;
     this.events = events;
-    if (role === 'host') this.startHost();
-    else this.startGuest();
+    if (role === 'guest') {
+      this._role = 'guest';
+      this.startGuest();
+    } else if (role === 'auto') {
+      // Salon partagé entre deux amis : on tente d'héberger ; si l'ami héberge
+      // déjà (id pris), on bascule automatiquement en invité.
+      this._role = 'host';
+      this.startHost(true);
+    } else {
+      this._role = 'host';
+      this.startHost();
+    }
   }
 
-  private startHost(): void {
+  get role(): 'host' | 'guest' {
+    return this._role;
+  }
+
+  private startHost(auto = false): void {
     this.peer = new Peer(PEER_PREFIX + this.code, peerOptions());
     this.peer.on('open', () => this.events.onOpen?.());
     this.peer.on('error', (err) => {
       if ((err as { type?: string }).type === 'unavailable-id') {
-        this.events.onError?.('Ce code de salon est déjà utilisé. Crée un nouveau salon.');
+        if (auto && !this.closed) {
+          // L'ami héberge déjà ce salon : on devient invité et on le rejoint.
+          this.peer?.destroy();
+          this.peer = null;
+          this._role = 'guest';
+          this.startGuest();
+        } else {
+          this.events.onError?.('Ce code de salon est déjà utilisé. Crée un nouveau salon.');
+        }
       } else {
         this.events.onError?.(`Erreur réseau : ${(err as Error).message}`);
       }

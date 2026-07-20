@@ -1,6 +1,14 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AVATARS, useProfile } from '../store/profile';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  AVATARS,
+  BANNER_THEMES,
+  FLAIRS,
+  bannerGradient,
+  flairLabel,
+  useProfile,
+} from '../store/profile';
+import { useFriends, extractFriendCode, pairRoomCode } from '../store/friends';
 import { loadGameHistory, deleteGameFromHistory, type SavedGame } from '../store/gameHistory';
 import { getBot } from '../bots/bots';
 import './profile.css';
@@ -8,9 +16,7 @@ import './profile.css';
 export default function Profile() {
   const profile = useProfile();
   const navigate = useNavigate();
-  const [editingName, setEditingName] = useState(false);
-  const [nameDraft, setNameDraft] = useState(profile.pseudo);
-  const [showAvatars, setShowAvatars] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [games, setGames] = useState<SavedGame[]>(() => loadGameHistory());
 
   const totals = useMemo(() => {
@@ -23,57 +29,46 @@ export default function Profile() {
 
   return (
     <div className="profile">
-      <div className="panel profile-header">
-        <button className="profile-avatar" onClick={() => setShowAvatars(!showAvatars)} title="Changer d'avatar">
-          {profile.avatar}
-        </button>
-        <div style={{ flex: 1 }}>
-          {editingName ? (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                profile.setProfile({ pseudo: nameDraft.trim() || 'Joueur' });
-                setEditingName(false);
-              }}
-            >
-              <input autoFocus value={nameDraft} maxLength={20} onChange={(e) => setNameDraft(e.target.value)} />
-              <button type="submit" className="primary" style={{ marginLeft: 8 }}>OK</button>
-            </form>
-          ) : (
-            <h1 style={{ margin: 0, cursor: 'pointer' }} onClick={() => setEditingName(true)} title="Cliquer pour modifier">
-              {profile.pseudo} ✏️
+      {/* En-tête façon carte de joueur : bannière + avatar + identité */}
+      <div className="profile-card">
+        <div className="profile-banner" style={{ background: bannerGradient(profile.banner) }}>
+          <button className="profile-edit-btn" onClick={() => setEditing(true)}>
+            ✎ Modifier le profil
+          </button>
+        </div>
+        <div className="profile-card-body">
+          <div className="profile-avatar-ring">
+            <span className="profile-avatar-emoji">{profile.avatar}</span>
+          </div>
+          <div className="profile-identity">
+            <h1 className="profile-name">
+              {profile.pseudo}
+              {profile.country && <span className="profile-country">{profile.country}</span>}
             </h1>
-          )}
-          <p style={{ color: 'var(--text-dim)', margin: '4px 0 0' }}>
-            {totals.total} partie{totals.total > 1 ? 's' : ''} jouée{totals.total > 1 ? 's' : ''}
-          </p>
-        </div>
-        <div className="profile-elo">
-          <span className="elo-value">{profile.elo}</span>
-          <span className="elo-label">Elo</span>
-        </div>
-        <div className="profile-elo">
-          <span className="elo-value">{profile.puzzleElo}</span>
-          <span className="elo-label">Elo puzzle</span>
+            {profile.flair && <span className="profile-flair">{flairLabel(profile.flair)}</span>}
+            <p className="profile-bio">
+              {profile.bio || 'Aucune présentation pour l’instant. Clique sur « Modifier le profil ».'}
+            </p>
+            <p className="profile-count">
+              {totals.total} partie{totals.total > 1 ? 's' : ''} jouée{totals.total > 1 ? 's' : ''}
+            </p>
+          </div>
+          <div className="profile-elos">
+            <div className="profile-elo">
+              <span className="elo-value">{profile.elo}</span>
+              <span className="elo-label">Elo</span>
+            </div>
+            <div className="profile-elo">
+              <span className="elo-value">{profile.puzzleElo}</span>
+              <span className="elo-label">Elo puzzle</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {showAvatars && (
-        <div className="panel avatar-gallery">
-          {AVATARS.map((a) => (
-            <button
-              key={a}
-              className={profile.avatar === a ? 'selected' : ''}
-              onClick={() => {
-                profile.setProfile({ avatar: a });
-                setShowAvatars(false);
-              }}
-            >
-              {a}
-            </button>
-          ))}
-        </div>
-      )}
+      {editing && <EditProfileModal onClose={() => setEditing(false)} />}
+
+      <FriendsSection onChallenge={(code) => navigate(`/play/friend?pair=${code}`)} />
 
       <div className="profile-cols">
         <div className="panel">
@@ -140,7 +135,7 @@ export default function Profile() {
       <button
         className="danger"
         onClick={() => {
-          if (confirm('Tout remettre à zéro (Elo, stats, progression) ? Les parties enregistrées sont conservées.')) {
+          if (confirm('Tout remettre à zéro (Elo, stats, progression) ? Ton profil et tes parties enregistrées sont conservés.')) {
             profile.resetProgress();
           }
         }}
@@ -148,6 +143,289 @@ export default function Profile() {
         Réinitialiser ma progression
       </button>
     </div>
+  );
+}
+
+// -------------------------------------------------- Modale d'édition du profil
+
+function EditProfileModal({ onClose }: { onClose: () => void }) {
+  const profile = useProfile();
+  const [pseudo, setPseudo] = useState(profile.pseudo);
+  const [avatar, setAvatar] = useState(profile.avatar);
+  const [banner, setBanner] = useState(profile.banner);
+  const [flair, setFlair] = useState(profile.flair);
+  const [country, setCountry] = useState(profile.country);
+  const [bio, setBio] = useState(profile.bio);
+
+  const save = () => {
+    profile.setProfile({
+      pseudo: pseudo.trim() || 'Joueur',
+      avatar,
+      banner,
+      flair,
+      country: country.trim(),
+      bio: bio.trim(),
+    });
+    onClose();
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-card edit-profile" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>Modifier le profil</h2>
+          <button className="modal-close" onClick={onClose} aria-label="Fermer">✕</button>
+        </div>
+
+        <div className="modal-body">
+          {/* Aperçu en direct */}
+          <div className="edit-preview" style={{ background: bannerGradient(banner) }}>
+            <span className="edit-preview-avatar">{avatar}</span>
+            <div>
+              <strong>{pseudo || 'Joueur'} {country}</strong>
+              <div className="edit-preview-flair">{flairLabel(flair)}</div>
+            </div>
+          </div>
+
+          <label className="field">
+            <span>Pseudo</span>
+            <input value={pseudo} maxLength={20} onChange={(e) => setPseudo(e.target.value)} autoFocus />
+          </label>
+
+          <div className="field">
+            <span>Avatar</span>
+            <div className="avatar-picker">
+              {AVATARS.map((a) => (
+                <button key={a} className={avatar === a ? 'selected' : ''} onClick={() => setAvatar(a)}>{a}</button>
+              ))}
+            </div>
+          </div>
+
+          <div className="field">
+            <span>Bannière</span>
+            <div className="banner-picker">
+              {BANNER_THEMES.map((b) => (
+                <button
+                  key={b.id}
+                  className={banner === b.id ? 'selected' : ''}
+                  style={{ background: b.gradient }}
+                  title={b.label}
+                  onClick={() => setBanner(b.id)}
+                />
+              ))}
+            </div>
+          </div>
+
+          <label className="field">
+            <span>Titre</span>
+            <select value={flair} onChange={(e) => setFlair(e.target.value)}>
+              {FLAIRS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+            </select>
+          </label>
+
+          <label className="field">
+            <span>Drapeau / emoji (optionnel)</span>
+            <input value={country} maxLength={4} placeholder="🇫🇷" onChange={(e) => setCountry(e.target.value)} />
+          </label>
+
+          <label className="field">
+            <span>Présentation</span>
+            <textarea value={bio} maxLength={140} rows={2} placeholder="Un mot sur toi, ton style de jeu…" onChange={(e) => setBio(e.target.value)} />
+          </label>
+        </div>
+
+        <div className="modal-footer">
+          <button onClick={onClose}>Annuler</button>
+          <button className="primary" onClick={save}>Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// -------------------------------------------------- Section Amis
+
+function FriendsSection({ onChallenge }: { onChallenge: (pairCode: string) => void }) {
+  const profile = useProfile();
+  const friends = useFriends();
+  const [tab, setTab] = useState<'code' | 'pseudo'>('code');
+  const [codeInput, setCodeInput] = useState('');
+  const [pseudoInput, setPseudoInput] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const inviteHandled = useRef(false);
+
+  const inviteLink = `${location.origin}${location.pathname}#/profile?friend=${friends.myCode}`;
+
+  // Ajout automatique via un lien d'invitation #/profile?friend=CODE
+  useEffect(() => {
+    const invited = searchParams.get('friend');
+    if (!invited || inviteHandled.current) return;
+    inviteHandled.current = true;
+    const code = extractFriendCode(invited);
+    const ok = friends.addFriend({ pseudo: `Ami ${code.slice(0, 4)}`, code });
+    setFeedback(ok ? 'Nouvel ami ajouté via le lien ! Renomme-le à ta guise.' : 'Cet ami est déjà dans ta liste (ou c’est ton propre code).');
+    setTimeout(() => setFeedback(''), 4000);
+    searchParams.delete('friend');
+    setSearchParams(searchParams, { replace: true });
+  }, [searchParams, setSearchParams, friends]);
+
+  const copyCode = () => {
+    navigator.clipboard.writeText(friends.myCode).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const shareCode = async () => {
+    const text = `Ajoute-moi sur NC.chess ♟️ — mon code ami : ${friends.myCode}`;
+    if (typeof navigator.share === 'function') {
+      try { await navigator.share({ title: 'NC.chess', text, url: inviteLink }); return; } catch { /* annulé */ }
+    }
+    navigator.clipboard.writeText(`${text} ${inviteLink}`);
+    setFeedback('Lien d’invitation copié.');
+    setTimeout(() => setFeedback(''), 2500);
+  };
+
+  const addByCode = () => {
+    const code = extractFriendCode(codeInput);
+    if (code.replace('-', '').length < 8) {
+      setFeedback('Code invalide (format XXXX-XXXX).');
+      return;
+    }
+    const ok = friends.addFriend({ pseudo: `Ami ${code.slice(0, 4)}`, code });
+    setFeedback(ok ? 'Ami ajouté ! Tu peux le renommer.' : 'Cet ami est déjà dans ta liste (ou c’est ton propre code).');
+    if (ok) setCodeInput('');
+    setTimeout(() => setFeedback(''), 3000);
+  };
+
+  const addByPseudo = () => {
+    const name = pseudoInput.trim();
+    if (!name) return;
+    friends.addFriend({ pseudo: name });
+    setFeedback(`« ${name} » ajouté. Renseigne son code plus tard pour pouvoir le défier.`);
+    setPseudoInput('');
+    setTimeout(() => setFeedback(''), 3000);
+  };
+
+  return (
+    <div className="panel friends-panel">
+      <h2>👥 Mes amis</h2>
+
+      <div className="my-code">
+        <div>
+          <span className="my-code-label">Mon code ami</span>
+          <span className="my-code-value">{friends.myCode}</span>
+        </div>
+        <div className="my-code-actions">
+          <button onClick={copyCode}>{copied ? '✓ Copié' : '📋 Copier'}</button>
+          <button className="primary" onClick={shareCode}>🔗 Partager</button>
+        </div>
+      </div>
+
+      <div className="add-friend">
+        <div className="add-friend-tabs">
+          <button className={tab === 'code' ? 'active' : ''} onClick={() => setTab('code')}>Par code / lien</button>
+          <button className={tab === 'pseudo' ? 'active' : ''} onClick={() => setTab('pseudo')}>Par pseudo</button>
+        </div>
+        {tab === 'code' ? (
+          <div className="add-friend-row">
+            <input
+              placeholder="Code ami ou lien (ex. AF3P-B2K9)"
+              value={codeInput}
+              onChange={(e) => setCodeInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addByCode()}
+            />
+            <button className="primary" onClick={addByCode}>Ajouter</button>
+          </div>
+        ) : (
+          <div className="add-friend-row">
+            <input
+              placeholder="Pseudo de ton ami"
+              value={pseudoInput}
+              maxLength={20}
+              onChange={(e) => setPseudoInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addByPseudo()}
+            />
+            <button className="primary" onClick={addByPseudo}>Ajouter</button>
+          </div>
+        )}
+        {feedback && <p className="add-friend-feedback">{feedback}</p>}
+      </div>
+
+      <div className="friends-list">
+        {friends.friends.length === 0 && (
+          <p style={{ color: 'var(--text-dim)', margin: '8px 0 0' }}>
+            Aucun ami pour l’instant. Échange ton code avec quelqu’un pour l’ajouter !
+          </p>
+        )}
+        {friends.friends.map((f) => (
+          <div key={f.id} className="friend-row">
+            <span className="friend-avatar">{f.avatar}</span>
+            <div className="friend-info">
+              <FriendName friend={f} onRename={(name) => friends.updateFriend(f.id, { pseudo: name })} />
+              <span className="friend-code">{f.code || 'code non renseigné'}</span>
+            </div>
+            {f.code ? (
+              <button
+                className="primary"
+                title="Défier dans un salon privé"
+                onClick={() => onChallenge(pairRoomCode(friends.myCode, f.code))}
+              >
+                ⚔️ Défier
+              </button>
+            ) : (
+              <AddCodeButton onSet={(code) => friends.updateFriend(f.id, { code })} />
+            )}
+            <button title="Retirer" onClick={() => friends.removeFriend(f.id)}>🗑️</button>
+          </div>
+        ))}
+      </div>
+      <p className="friends-note">
+        Le défi ouvre un salon privé partagé : quand ton ami clique aussi sur « Défier » (ou reçoit le lien),
+        vous vous retrouvez automatiquement — pas besoin de vous rééchanger un code.
+      </p>
+      {profile.pseudo === 'Joueur' && (
+        <p className="friends-note">💡 Pense à choisir un pseudo dans « Modifier le profil » : c’est lui que voient tes amis.</p>
+      )}
+    </div>
+  );
+}
+
+function FriendName({ friend, onRename }: { friend: { pseudo: string }; onRename: (name: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(friend.pseudo);
+  if (editing) {
+    return (
+      <form
+        onSubmit={(e) => { e.preventDefault(); onRename(draft.trim() || friend.pseudo); setEditing(false); }}
+        style={{ display: 'flex', gap: 4 }}
+      >
+        <input autoFocus value={draft} maxLength={20} onChange={(e) => setDraft(e.target.value)} style={{ padding: '2px 6px', fontSize: 14 }} />
+        <button type="submit" style={{ padding: '2px 8px' }}>OK</button>
+      </form>
+    );
+  }
+  return (
+    <span className="friend-name" onClick={() => setEditing(true)} title="Renommer">
+      {friend.pseudo}
+    </span>
+  );
+}
+
+function AddCodeButton({ onSet }: { onSet: (code: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [val, setVal] = useState('');
+  if (!open) return <button onClick={() => setOpen(true)}>+ code</button>;
+  return (
+    <form
+      onSubmit={(e) => { e.preventDefault(); onSet(val); setOpen(false); }}
+      style={{ display: 'flex', gap: 4 }}
+    >
+      <input autoFocus placeholder="XXXX-XXXX" value={val} onChange={(e) => setVal(e.target.value)} style={{ width: 100, padding: '4px 6px', fontSize: 13 }} />
+      <button type="submit" className="primary" style={{ padding: '4px 8px' }}>OK</button>
+    </form>
   );
 }
 

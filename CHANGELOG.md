@@ -8,6 +8,30 @@ et le versionnage suit [SemVer](https://semver.org/lang/fr/) :
 La version affichée dans l'app (sidebar + Réglages → À propos) provient de
 `package.json`.
 
+## [0.0.2] — 2026-07-20
+
+### Ajouté
+- **Bilan de partie détaillé** : narration complète après analyse (verdict,
+  précision commentée, plus grosses erreurs de chaque camp, tournant de la
+  partie, points forts/faibles par phase, conseils ciblés) avec moments-clés
+  cliquables. Commentaires du coach beaucoup plus explicatifs (ce qui était
+  menacé, pourquoi le meilleur coup l'était, valeur perdue en points).
+- **Scénarios alternatifs** (« Et si ? ») : depuis n'importe quel coup de la
+  revue, rejoue librement une autre suite contre les suggestions du moteur,
+  sans toucher à la vraie partie.
+- **Système d'amis** : code ami personnel (XXXX-XXXX), ajout par code, lien
+  d'invitation ou pseudo ; défi dans un salon privé partagé et déterministe
+  (les deux amis se retrouvent sans rééchanger de code) ; ajout d'un adversaire
+  en ami directement en fin de partie.
+- **Personnalisation du compte** : présentation (bio), titre/flair, bannière
+  colorée, drapeau, et une galerie d'avatars élargie.
+
+### Modifié
+- **Refonte de l'écran profil** : vraie carte de joueur (bannière + avatar +
+  identité) et édition via une modale propre — fini le crayon inline.
+- « Réinitialiser ma progression » conserve désormais ton identité (pseudo,
+  avatar, personnalisation).
+
 ## [0.0.1] — 2026-07-20
 
 Première version suivie. L'application est jouable, déployée et installable.

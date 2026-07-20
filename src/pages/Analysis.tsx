@@ -6,11 +6,14 @@ import EvalBar from '../components/EvalBar';
 import { Engine, evalToWhiteCp } from '../engine/engine';
 import {
   analyzeGame,
+  buildReviewSummary,
   coachComment,
   MOVE_CLASS_INFO,
   type GameAnalysis,
   type MoveClass,
+  type ReviewSummary,
 } from '../engine/analysis';
+import { loadOpenings, findOpening } from '../data/openingBook';
 import { loadGameHistory } from '../store/gameHistory';
 import { useSettings } from '../store/settings';
 import { speak } from '../coach/voice';
@@ -33,7 +36,7 @@ export default function Analysis() {
   });
 
   if (mode.kind === 'review') {
-    return <ReviewView sans={mode.sans} onBack={() => setMode({ kind: 'home' })} />;
+    return <ReviewView sans={mode.sans} white={mode.white} black={mode.black} onBack={() => setMode({ kind: 'home' })} />;
   }
   if (mode.kind === 'free') {
     return <FreeBoard startFen={mode.fen} onBack={() => setMode({ kind: 'home' })} />;
@@ -119,16 +122,31 @@ function AnalysisHome({ onSelect }: { onSelect: (m: Mode) => void }) {
 
 // ---------------------------------------------------------------- Revue
 
-function ReviewView({ sans, onBack }: { sans: string[]; onBack: () => void }) {
+function ReviewView({ sans, white, black, onBack }: { sans: string[]; white: string; black: string; onBack: () => void }) {
   const settings = useSettings();
   const [analysis, setAnalysis] = useState<GameAnalysis | null>(null);
+  const [summary, setSummary] = useState<ReviewSummary | null>(null);
   const [progress, setProgress] = useState(0);
   const [depth, setDepth] = useState(12);
   const [started, setStarted] = useState(false);
   const [cursor, setCursor] = useState(-1); // -1 = position initiale, i = après le coup i
   const [flipped, setFlipped] = useState(false);
+  const [exploreFen, setExploreFen] = useState<string | null>(null);
+  const [exploreFromMove, setExploreFromMove] = useState(0);
   const engineRef = useRef<Engine | null>(null);
   const signalRef = useRef({ cancelled: false });
+
+  // Construit le bilan narratif dès que l'analyse est prête (avec l'ouverture).
+  useEffect(() => {
+    if (!analysis) return;
+    let alive = true;
+    loadOpenings().then(() => {
+      if (!alive) return;
+      const opening = findOpening(sans);
+      setSummary(buildReviewSummary(analysis, white, black, opening?.name));
+    });
+    return () => { alive = false; };
+  }, [analysis, sans, white, black]);
 
   useEffect(() => {
     // Ré-arme le signal après le cycle montage/démontage de StrictMode
@@ -192,6 +210,18 @@ function ReviewView({ sans, onBack }: { sans: string[]; onBack: () => void }) {
   const fen = current ? current.fenAfter : analysis.moves[0]?.fenBefore ?? new Chess().fen();
   const cp = current ? current.cpAfter : analysis.initialCp;
 
+  // Mode « Et si ? » : explorer un scénario alternatif depuis la position courante.
+  if (exploreFen) {
+    return (
+      <ExploreBoard
+        startFen={exploreFen}
+        fromMoveNo={exploreFromMove}
+        orientation={flipped ? 'b' : 'w'}
+        onClose={() => setExploreFen(null)}
+      />
+    );
+  }
+
   const arrows: Arrow[] = [];
   if (current && current.classification !== 'best' && current.classification !== 'brilliant' && current.bestMoveUci.length >= 4) {
     arrows.push({
@@ -223,6 +253,13 @@ function ReviewView({ sans, onBack }: { sans: string[]; onBack: () => void }) {
           <button onClick={() => setCursor(Math.min(analysis.moves.length - 1, cursor + 1))} disabled={cursor >= analysis.moves.length - 1}>▶</button>
           <button onClick={() => setCursor(analysis.moves.length - 1)} disabled={cursor >= analysis.moves.length - 1}>⏭</button>
           <button onClick={() => setFlipped(!flipped)}>🔄</button>
+          <button
+            className="explore-btn"
+            title="Explorer un autre coup depuis cette position"
+            onClick={() => { setExploreFen(fen); setExploreFromMove(cursor >= 0 ? Math.floor(cursor / 2) + 1 : 0); }}
+          >
+            🔬 Et si ?
+          </button>
         </div>
         <div className="coach-box">
           <span className="coach-face">🧑‍🏫</span>
@@ -234,6 +271,25 @@ function ReviewView({ sans, onBack }: { sans: string[]; onBack: () => void }) {
       </div>
 
       <div className="review-side-col">
+        {summary && (
+          <div className="panel review-summary">
+            <h2 className="review-summary-title">📝 Bilan de la partie</h2>
+            <p className="review-headline">{summary.headline}</p>
+            {summary.paragraphs.map((p, i) => (
+              <p key={i} className="review-para">{p}</p>
+            ))}
+            {summary.keyMoments.length > 0 && (
+              <div className="key-moments">
+                <h3>Moments-clés</h3>
+                {summary.keyMoments.map((k, i) => (
+                  <button key={i} className="key-moment" onClick={() => setCursor(k.cursor)}>
+                    {k.text}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <div className="panel accuracy-panel">
           <div className="accuracy-col">
             <span className="accuracy-value">{analysis.accuracy.w}</span>
@@ -440,6 +496,135 @@ function FreeBoard({ startFen, onBack }: { startFen?: string; onBack: () => void
           ))}
         </div>
         <button onClick={onBack}>← Retour</button>
+      </div>
+    </div>
+  );
+}
+
+// ------------------------------------------------------ Scénario alternatif
+
+/**
+ * Bac à sable « Et si ? » : rejoue librement depuis une position de la partie
+ * pour explorer d'autres scénarios, avec les suggestions du moteur en direct.
+ */
+function ExploreBoard({
+  startFen,
+  fromMoveNo,
+  orientation,
+  onClose,
+}: {
+  startFen: string;
+  fromMoveNo: number;
+  orientation: 'w' | 'b';
+  onClose: () => void;
+}) {
+  const settings = useSettings();
+  const chessRef = useRef(new Chess(startFen));
+  const [fen, setFen] = useState(startFen);
+  const [cp, setCp] = useState(0);
+  const [lines, setLines] = useState<{ san: string[]; cp: number }[]>([]);
+  const [moved, setMoved] = useState(false);
+  const engineRef = useRef<Engine | null>(null);
+
+  useEffect(() => {
+    const engine = new Engine();
+    engineRef.current = engine;
+    engine.setOptions({ UCI_LimitStrength: false, 'Skill Level': 20 });
+    return () => engine.dispose();
+  }, []);
+
+  useEffect(() => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    let stale = false;
+    const chess = new Chess(fen);
+    if (chess.isGameOver()) {
+      setCp(chess.isCheckmate() ? (chess.turn() === 'w' ? -10000 : 10000) : 0);
+      setLines([]);
+      return;
+    }
+    engine.search(fen, { depth: 14, multipv: 3 }).then(({ candidates }) => {
+      if (stale) return;
+      const turn = fen.split(' ')[1] as 'w' | 'b';
+      const best = candidates.slice(-3);
+      if (best.length) setCp(evalToWhiteCp(best[0].eval, turn));
+      setLines(
+        best.map((c) => {
+          const lineChess = new Chess(fen);
+          const sans: string[] = [];
+          try {
+            for (const u of c.pv.slice(0, 6)) {
+              sans.push(lineChess.move({ from: u.slice(0, 2), to: u.slice(2, 4), promotion: u.length > 4 ? (u[4] as 'q') : undefined }).san);
+            }
+          } catch { /* ligne tronquée */ }
+          return { san: sans, cp: evalToWhiteCp(c.eval, turn) };
+        })
+      );
+    });
+    return () => { stale = true; };
+  }, [fen]);
+
+  const bestArrow: Arrow[] = useMemo(() => {
+    if (!lines.length || !lines[0].san.length) return [];
+    try {
+      const chess = new Chess(fen);
+      const m = chess.move(lines[0].san[0]);
+      return [{ from: m.from, to: m.to, color: 'rgba(129, 182, 76, 0.75)' }];
+    } catch {
+      return [];
+    }
+  }, [lines, fen]);
+
+  const reset = () => {
+    chessRef.current = new Chess(startFen);
+    setFen(startFen);
+    setMoved(false);
+  };
+
+  return (
+    <div className="review-layout">
+      <div className="review-board-col">
+        <div className="explore-banner">
+          🔬 Scénario alternatif {fromMoveNo > 0 ? `depuis le coup ${fromMoveNo}` : 'depuis le début'} — joue les
+          deux camps pour tester « et si… ? ». Ça ne modifie pas ta vraie partie.
+        </div>
+        <div className="review-board-row">
+          {settings.showEvalBar && <EvalBar cp={cp} flipped={orientation === 'b'} />}
+          <Chessboard
+            fen={fen}
+            orientation={orientation}
+            playableColor="both"
+            onMove={(m) => {
+              try {
+                chessRef.current.move({ from: m.from, to: m.to, promotion: m.promotion });
+                setFen(chessRef.current.fen());
+                setMoved(true);
+              } catch { /* coup illégal */ }
+            }}
+            arrows={bestArrow}
+          />
+        </div>
+        <div className="review-nav">
+          <button onClick={() => { chessRef.current.undo(); setFen(chessRef.current.fen()); }} disabled={!moved}>↩ Annuler</button>
+          <button onClick={reset} disabled={!moved}>⟲ Reprendre le scénario</button>
+          <button className="primary" onClick={onClose}>← Revenir à la revue</button>
+        </div>
+      </div>
+      <div className="review-side-col">
+        <div className="panel">
+          <h3 style={{ marginBottom: 8 }}>Suggestions du moteur</h3>
+          {lines.length === 0 && <p style={{ color: 'var(--text-dim)' }}>Calcul…</p>}
+          {lines.map((l, i) => (
+            <div key={i} className="engine-line">
+              <span className="engine-line-eval">{l.cp >= 9000 ? '+M' : l.cp <= -9000 ? '-M' : (l.cp / 100).toFixed(1)}</span>
+              <span>{l.san.join(' ')}</span>
+            </div>
+          ))}
+        </div>
+        <p style={{ color: 'var(--text-dim)', fontSize: 13 }}>
+          Astuce : joue le coup que tu aurais aimé faire, puis regarde comment le moteur répond.
+        </p>
+        <button onClick={onClose}>← Revenir à la revue</button>
       </div>
     </div>
   );

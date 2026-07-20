@@ -9,6 +9,7 @@ import { TIME_CONTROLS, customTimeControl, type TimeControl } from '../game/time
 import { useChessGame, type EndReason } from '../game/useChessGame';
 import { P2PSession, generateRoomCode, normalizeRoomCode, type P2PMessage, type PlayerInfo } from '../p2p/session';
 import { useProfile } from '../store/profile';
+import { useFriends } from '../store/friends';
 import { saveGameToHistory } from '../store/gameHistory';
 import { playSound } from '../audio/sounds';
 import './playFriend.css';
@@ -23,6 +24,7 @@ interface MatchConfig {
 export default function PlayFriend() {
   const [searchParams] = useSearchParams();
   const urlCode = normalizeRoomCode(searchParams.get('code') ?? '');
+  const urlPair = (searchParams.get('pair') ?? '').replace(/[^A-HJ-NP-Z2-9]/gi, '').toUpperCase();
   const [match, setMatch] = useState<MatchConfig | null>(null);
   const [rematchKey, setRematchKey] = useState(0);
 
@@ -42,12 +44,14 @@ export default function PlayFriend() {
       />
     );
   }
-  return <Lobby initialCode={urlCode} onMatchReady={setMatch} />;
+  return <Lobby initialCode={urlCode} initialPair={urlPair} onMatchReady={setMatch} />;
 }
 
-function Lobby({ initialCode, onMatchReady }: { initialCode: string; onMatchReady: (m: MatchConfig) => void }) {
+function Lobby({ initialCode, initialPair, onMatchReady }: { initialCode: string; initialPair?: string; onMatchReady: (m: MatchConfig) => void }) {
   const profile = useProfile();
-  const [mode, setMode] = useState<'menu' | 'hosting' | 'joining'>(initialCode ? 'joining' : 'menu');
+  const [mode, setMode] = useState<'menu' | 'hosting' | 'joining' | 'challenge'>(
+    initialPair ? 'challenge' : initialCode ? 'joining' : 'menu'
+  );
   const [tc, setTc] = useState<TimeControl>(TIME_CONTROLS.find((t) => t.id === '10+0')!);
   const [code, setCode] = useState('');
   const [joinCode, setJoinCode] = useState(initialCode);
@@ -57,7 +61,8 @@ function Lobby({ initialCode, onMatchReady }: { initialCode: string; onMatchRead
   const sessionRef = useRef<P2PSession | null>(null);
   const autoJoinDone = useRef(false);
 
-  const me: PlayerInfo = { name: profile.pseudo, avatar: profile.avatar, elo: profile.elo };
+  const myCode = useFriends((s) => s.myCode);
+  const me: PlayerInfo = { name: profile.pseudo, avatar: profile.avatar, elo: profile.elo, code: myCode };
 
 
   const host = useCallback(() => {
@@ -132,6 +137,53 @@ function Lobby({ initialCode, onMatchReady }: { initialCode: string; onMatchRead
     [profile.pseudo, profile.avatar, profile.elo, onMatchReady]
   );
 
+  // Défi privé entre amis : salon déterministe partagé. On tente d'héberger ;
+  // si l'ami héberge déjà, la session bascule automatiquement en invité.
+  const challenge = useCallback(
+    (pairCode: string, chosenTc: TimeControl) => {
+      setError('');
+      setMode('joining');
+      setStatus('Ouverture du salon privé…');
+      const session = new P2PSession('auto', pairCode, {
+        onOpen: () => setStatus('En attente de ton ami…'),
+        onConnected: () => {
+          if (session.role === 'guest') {
+            setStatus('Connecté ! Salutations…');
+            session.send({ type: 'hello', player: me });
+          } else {
+            setStatus('Ton ami est là !');
+          }
+        },
+        onError: (msg) => { setError(msg); setMode('menu'); },
+        onMessage: (msg) => {
+          if (msg.type === 'hello' && session.role === 'host') {
+            const guestColor: Color = Math.random() < 0.5 ? 'w' : 'b';
+            session.send({
+              type: 'start',
+              guestColor,
+              tcInitial: chosenTc.initial,
+              tcIncrement: chosenTc.increment,
+              host: me,
+            });
+            playSound('NewChallenge');
+            onMatchReady({ session, myColor: guestColor === 'w' ? 'b' : 'w', opponent: msg.player, tc: chosenTc });
+          } else if (msg.type === 'start' && session.role === 'guest') {
+            playSound('NewChallenge');
+            const tcRecv =
+              msg.tcInitial == null
+                ? TIME_CONTROLS[0]
+                : TIME_CONTROLS.find((t) => t.initial === msg.tcInitial && t.increment === msg.tcIncrement) ??
+                  customTimeControl(msg.tcInitial, msg.tcIncrement);
+            onMatchReady({ session, myColor: msg.guestColor, opponent: msg.host, tc: tcRecv });
+          }
+        },
+      });
+      sessionRef.current = session;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [profile.pseudo, profile.avatar, profile.elo, onMatchReady]
+  );
+
   // Auto-join depuis un lien d'invitation. Le cleanup gère aussi le
   // double-montage de StrictMode : on referme et on ré-arme le flag pour
   // que la seconde exécution recrée la session proprement.
@@ -150,6 +202,30 @@ function Lobby({ initialCode, onMatchReady }: { initialCode: string; onMatchRead
   }, [initialCode, join]);
 
   const inviteLink = `${location.origin}${location.pathname}#/play/friend?code=${code}`;
+
+  if (mode === 'challenge' && initialPair) {
+    return (
+      <div className="friend-lobby">
+        <h1>⚔️ Défi entre amis</h1>
+        <p style={{ color: 'var(--text-dim)' }}>
+          Choisis la cadence puis lance le défi. Ton ami arrive dans le même salon privé dès qu’il clique
+          sur « Défier » de son côté (ou reçoit ton lien).
+        </p>
+        {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
+        <div className="panel">
+          <h3 style={{ fontSize: 14, color: 'var(--text-dim)' }}>Cadence</h3>
+          <TimeControlPicker value={tc} onChange={setTc} />
+          <button
+            className="primary"
+            style={{ width: '100%', marginTop: 14, fontSize: 16 }}
+            onClick={() => challenge(initialPair, tc)}
+          >
+            🚀 Lancer le défi
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (mode === 'hosting') {
     return (
@@ -235,8 +311,12 @@ function FriendGame({
 }) {
   const navigate = useNavigate();
   const profile = useProfile();
+  const addFriend = useFriends((s) => s.addFriend);
+  const savedFriends = useFriends((s) => s.friends);
   const { session, myColor, opponent, tc } = match;
   const oppColor: Color = myColor === 'w' ? 'b' : 'w';
+  const alreadyFriend = !!opponent.code && savedFriends.some((f) => f.code === opponent.code);
+  const [friendAdded, setFriendAdded] = useState(false);
 
   const [chatMessages, setChatMessages] = useState<{ mine: boolean; text: string }[]>([]);
   const [chatDraft, setChatDraft] = useState('');
@@ -398,7 +478,18 @@ function FriendGame({
         />
       </div>
       <div className="game-side-col">
-        <div className="room-badge">Salon <strong>{session.code}</strong></div>
+        <div className="room-badge">
+          Salon <strong>{session.code}</strong>
+          {opponent.code && !alreadyFriend && !friendAdded && (
+            <button
+              className="add-friend-inline"
+              onClick={() => { addFriend({ pseudo: opponent.name, avatar: opponent.avatar, code: opponent.code }); setFriendAdded(true); }}
+            >
+              ➕ Ajouter en ami
+            </button>
+          )}
+          {(alreadyFriend || friendAdded) && <span className="friend-tag">✓ Ami</span>}
+        </div>
         {banner && <div className="bot-message">{banner}</div>}
         {drawIncoming && !game.result && (
           <div className="bot-message">
