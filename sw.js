@@ -2,7 +2,7 @@
    - index.html : réseau d'abord (pour récupérer les mises à jour), cache en secours
    - assets (js/css/pièces/sons/moteur) : cache d'abord, réseau en secours */
 
-const CACHE = 'ncchess-v1';
+const CACHE = 'ncchess-v2';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
