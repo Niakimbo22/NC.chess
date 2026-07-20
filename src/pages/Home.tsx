@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useProfile } from '../store/profile';
 import './home.css';
 
 const CARDS = [
@@ -11,13 +12,30 @@ const CARDS = [
 ];
 
 export default function Home() {
+  const profile = useProfile();
+  const dailyDone = localStorage.getItem('ncchess-daily') === new Date().toISOString().slice(0, 10);
+
   return (
     <div className="home">
       <div className="home-hero">
         <h1>
-          Bienvenue sur <span className="brand">NC<em>.chess</em></span>
+          Bienvenue, <span className="brand">{profile.pseudo}</span> {profile.avatar}
         </h1>
         <p>Toutes les fonctionnalités premium des échecs, 100 % gratuites. Entraîne-toi, joue, progresse.</p>
+        <div className="home-stats">
+          <Link to="/profile" className="home-stat">
+            <span className="home-stat-value">{profile.elo}</span>
+            <span className="home-stat-label">Elo</span>
+          </Link>
+          <Link to="/profile" className="home-stat">
+            <span className="home-stat-value">{profile.puzzleElo}</span>
+            <span className="home-stat-label">Elo puzzle</span>
+          </Link>
+          <Link to="/puzzles" className="home-stat">
+            <span className="home-stat-value">{dailyDone ? '✅' : '🧩'}</span>
+            <span className="home-stat-label">Puzzle du jour</span>
+          </Link>
+        </div>
       </div>
       <div className="home-grid">
         {CARDS.map((c) => (

@@ -13,7 +13,8 @@ export function generateRoomCode(): string {
 }
 
 export function normalizeRoomCode(input: string): string {
-  return input.trim().toUpperCase().replace(/[^A-Z2-9]/g, '');
+  // Ne garde que les caractères de l'alphabet de génération (pas de I/O/0/1)
+  return input.trim().toUpperCase().replace(/[^A-HJ-NP-Z2-9]/g, '');
 }
 
 export interface PlayerInfo {

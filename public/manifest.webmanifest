@@ -1,0 +1,18 @@
+{
+  "name": "NC.chess — Échecs gratuits et complets",
+  "short_name": "NC.chess",
+  "description": "IA de tous niveaux, jeu entre amis, analyse illimitée, puzzles, leçons — 100 % gratuit.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#161512",
+  "theme_color": "#161512",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "pieces/cburnett/wN.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

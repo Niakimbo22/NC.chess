@@ -84,15 +84,29 @@
   .app-sidebar {
     width: 100%;
     flex-direction: row;
-    padding: 4px;
+    padding: 2px 2px calc(2px + env(safe-area-inset-bottom));
     overflow-x: auto;
-    align-items: center;
+    align-items: stretch;
+    justify-content: space-between;
+    flex-shrink: 0;
+    border-top: 1px solid var(--border);
   }
   .app-logo { display: none; }
-  .app-nav-item { flex-direction: column; gap: 2px; padding: 6px 10px; font-size: 11px; }
-  .app-nav-icon { width: auto; }
+  .app-nav-item {
+    flex-direction: column;
+    gap: 1px;
+    padding: 6px 6px;
+    font-size: 10px;
+    flex: 1;
+    min-width: 44px;
+    justify-content: center;
+    align-items: center;
+    white-space: nowrap;
+  }
+  .app-nav-icon { width: auto; font-size: 20px; }
   .app-sidebar-footer { display: none; }
-  .app-main { padding: 10px; }
+  .app-main { padding: 10px; -webkit-overflow-scrolling: touch; }
   .game-layout { grid-template-columns: 1fr; }
   .game-side-col { height: auto; position: static; }
+  .home-hero h1 { font-size: 26px; }
 }
