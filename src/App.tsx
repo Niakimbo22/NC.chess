@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import InstallPwaButton from './components/InstallPwaButton';
 import './app.css';
 
 const NAV_ITEMS = [
@@ -17,7 +18,7 @@ export default function App() {
     <div className="app-layout">
       <nav className="app-sidebar">
         <NavLink to="/" className="app-logo">
-          <img src={`${import.meta.env.BASE_URL}pieces/cburnett/wN.svg`} alt="" />
+          <img src={`${import.meta.env.BASE_URL}icons/knight-medallion.svg`} alt="" />
           <span>NC<em>.chess</em></span>
         </NavLink>
         {NAV_ITEMS.map((item) => (
@@ -31,8 +32,9 @@ export default function App() {
             <span className="app-nav-label">{item.label}</span>
           </NavLink>
         ))}
+        <InstallPwaButton compact />
         <div className="app-sidebar-footer">
-          <span>100 % gratuit ✨</span>
+          <InstallPwaButton />
         </div>
       </nav>
       <main className="app-main">

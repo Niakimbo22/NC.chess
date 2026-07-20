@@ -1,0 +1,39 @@
+.install-pwa {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--gold-light);
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: var(--radius);
+  animation: goldPulse 3.5s ease-in-out infinite;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+button.install-pwa:hover { background: rgba(212, 175, 55, 0.16); transform: translateY(-1px); }
+.install-pwa-icon { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; }
+.install-pwa--ios { cursor: default; text-align: left; line-height: 1.35; font-weight: 600; }
+.install-pwa--fallback { animation: none; background: none; border: none; color: var(--text-dim); font-weight: 400; }
+
+.install-pwa--compact { display: none; }
+@media (max-width: 900px) {
+  .install-pwa--compact {
+    display: flex;
+    flex-direction: column;
+    width: auto;
+    gap: 1px;
+    padding: 6px 6px;
+    font-size: 9px;
+    flex: 1;
+    min-width: 44px;
+    border: none;
+    background: none;
+    animation: none;
+  }
+  .install-pwa--compact .install-pwa-icon { width: 22px; height: 22px; animation: goldPulse 2.2s ease-in-out infinite; }
+}
