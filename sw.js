@@ -2,7 +2,7 @@
    - index.html : réseau d'abord (pour récupérer les mises à jour), cache en secours
    - assets (js/css/pièces/sons/moteur) : cache d'abord, réseau en secours */
 
-const CACHE = 'ncchess-v2';
+const CACHE = 'ncchess-v3';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -34,6 +34,23 @@ self.addEventListener('fetch', (event) => {
           return res;
         })
         .catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
+
+  // Manifeste : réseau d'abord (source de vérité des icônes PWA, ne doit
+  // jamais rester figé en cache), repli sur le cache hors ligne.
+  if (url.pathname.endsWith('/manifest.webmanifest')) {
+    event.respondWith(
+      fetch(request)
+        .then((res) => {
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(request, copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match(request))
     );
     return;
   }
