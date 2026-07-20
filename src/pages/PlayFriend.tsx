@@ -312,11 +312,17 @@ function FriendGame({
   const navigate = useNavigate();
   const profile = useProfile();
   const addFriend = useFriends((s) => s.addFriend);
+  const confirmFriendByCode = useFriends((s) => s.confirmFriendByCode);
   const savedFriends = useFriends((s) => s.friends);
+  const myCode = useFriends((s) => s.myCode);
   const { session, myColor, opponent, tc } = match;
   const oppColor: Color = myColor === 'w' ? 'b' : 'w';
-  const alreadyFriend = !!opponent.code && savedFriends.some((f) => f.code === opponent.code);
+  const savedFriend = opponent.code ? savedFriends.find((f) => f.code === opponent.code) : undefined;
+  const alreadyConfirmed = !!savedFriend && (savedFriend.status ?? 'confirmed') === 'confirmed';
   const [friendAdded, setFriendAdded] = useState(false);
+  const [friendReqSent, setFriendReqSent] = useState(false);
+  const [friendReqIncoming, setFriendReqIncoming] = useState(false);
+  const autoConfirmedRef = useRef(false);
 
   const [chatMessages, setChatMessages] = useState<{ mine: boolean; text: string }[]>([]);
   const [chatDraft, setChatDraft] = useState('');
@@ -333,6 +339,18 @@ function FriendGame({
     setBanner(text);
     setTimeout(() => setBanner(null), 3500);
   }, []);
+
+  // Ami ajouté manuellement (code collé) mais jamais vérifié : la connexion
+  // P2P en direct prouve que c'est bien la bonne personne → confirmation auto.
+  useEffect(() => {
+    if (autoConfirmedRef.current) return;
+    if (savedFriend && (savedFriend.status ?? 'confirmed') !== 'confirmed') {
+      autoConfirmedRef.current = true;
+      confirmFriendByCode(opponent.code!, { pseudo: opponent.name, avatar: opponent.avatar });
+      flashBanner(`✓ Ami confirmé : ${opponent.name}`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedFriend?.id]);
 
   const game = useChessGame({
     timeControl: tc,
@@ -398,6 +416,20 @@ function FriendGame({
             break;
           case 'rematchAccept':
             onRematch(oppColor);
+            break;
+          case 'friendRequest':
+            setFriendReqIncoming(true);
+            playSound('GenericNotify');
+            break;
+          case 'friendRequestAccept':
+            addFriend({ pseudo: msg.player.name, avatar: msg.player.avatar, code: msg.player.code, status: 'confirmed' });
+            setFriendReqSent(false);
+            setFriendAdded(true);
+            flashBanner(`${msg.player.name} a accepté ta demande d’ami !`);
+            break;
+          case 'friendRequestDecline':
+            setFriendReqSent(false);
+            flashBanner(`${opponent.name} a décliné la demande d’ami.`);
             break;
           case 'stateRequest':
             session.send({
@@ -480,17 +512,41 @@ function FriendGame({
       <div className="game-side-col">
         <div className="room-badge">
           Salon <strong>{session.code}</strong>
-          {opponent.code && !alreadyFriend && !friendAdded && (
+          {opponent.code && !alreadyConfirmed && !friendAdded && !friendReqSent && (
             <button
               className="add-friend-inline"
-              onClick={() => { addFriend({ pseudo: opponent.name, avatar: opponent.avatar, code: opponent.code }); setFriendAdded(true); }}
+              onClick={() => {
+                session.send({ type: 'friendRequest', player: { name: profile.pseudo, avatar: profile.avatar, elo: profile.elo, code: myCode } });
+                setFriendReqSent(true);
+                flashBanner('Demande d’ami envoyée…');
+              }}
             >
               ➕ Ajouter en ami
             </button>
           )}
-          {(alreadyFriend || friendAdded) && <span className="friend-tag">✓ Ami</span>}
+          {friendReqSent && !friendAdded && <span className="friend-tag">⏳ Demande envoyée…</span>}
+          {(alreadyConfirmed || friendAdded) && <span className="friend-tag">✓ Ami</span>}
         </div>
         {banner && <div className="bot-message">{banner}</div>}
+        {friendReqIncoming && (
+          <div className="bot-message">
+            {opponent.name} veut t’ajouter en ami.
+            <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+              <button
+                className="primary"
+                onClick={() => {
+                  addFriend({ pseudo: opponent.name, avatar: opponent.avatar, code: opponent.code, status: 'confirmed' });
+                  session.send({ type: 'friendRequestAccept', player: { name: profile.pseudo, avatar: profile.avatar, elo: profile.elo, code: myCode } });
+                  setFriendReqIncoming(false);
+                  setFriendAdded(true);
+                }}
+              >
+                Accepter
+              </button>
+              <button onClick={() => { session.send({ type: 'friendRequestDecline' }); setFriendReqIncoming(false); }}>Refuser</button>
+            </div>
+          </div>
+        )}
         {drawIncoming && !game.result && (
           <div className="bot-message">
             {opponent.name} propose la nulle.

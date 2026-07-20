@@ -8,7 +8,7 @@ import {
   flairLabel,
   useProfile,
 } from '../store/profile';
-import { useFriends, extractFriendCode, pairRoomCode } from '../store/friends';
+import { useFriends, extractFriendCode, pairRoomCode, type Friend } from '../store/friends';
 import { loadGameHistory, deleteGameFromHistory, type SavedGame } from '../store/gameHistory';
 import { getBot } from '../bots/bots';
 import './profile.css';
@@ -264,9 +264,13 @@ function FriendsSection({ onChallenge }: { onChallenge: (pairCode: string) => vo
     if (!invited || inviteHandled.current) return;
     inviteHandled.current = true;
     const code = extractFriendCode(invited);
-    const ok = friends.addFriend({ pseudo: `Ami ${code.slice(0, 4)}`, code });
-    setFeedback(ok ? 'Nouvel ami ajouté via le lien ! Renomme-le à ta guise.' : 'Cet ami est déjà dans ta liste (ou c’est ton propre code).');
-    setTimeout(() => setFeedback(''), 4000);
+    const id = friends.addFriend({ pseudo: `Ami ${code.slice(0, 4)}`, code });
+    setFeedback(
+      id
+        ? 'Ami ajouté en attente via le lien ! Il passera en « confirmé » dès votre première partie ensemble.'
+        : 'Cet ami est déjà dans ta liste (ou c’est ton propre code).'
+    );
+    setTimeout(() => setFeedback(''), 4500);
     searchParams.delete('friend');
     setSearchParams(searchParams, { replace: true });
   }, [searchParams, setSearchParams, friends]);
@@ -294,19 +298,23 @@ function FriendsSection({ onChallenge }: { onChallenge: (pairCode: string) => vo
       setFeedback('Code invalide (format XXXX-XXXX).');
       return;
     }
-    const ok = friends.addFriend({ pseudo: `Ami ${code.slice(0, 4)}`, code });
-    setFeedback(ok ? 'Ami ajouté ! Tu peux le renommer.' : 'Cet ami est déjà dans ta liste (ou c’est ton propre code).');
-    if (ok) setCodeInput('');
-    setTimeout(() => setFeedback(''), 3000);
+    const id = friends.addFriend({ pseudo: `Ami ${code.slice(0, 4)}`, code });
+    setFeedback(
+      id
+        ? 'Demande envoyée à ta liste ! Elle passera en « confirmé » dès votre première partie ensemble (ou en confirmant à la main).'
+        : 'Cet ami est déjà dans ta liste (ou c’est ton propre code).'
+    );
+    if (id) setCodeInput('');
+    setTimeout(() => setFeedback(''), 4500);
   };
 
   const addByPseudo = () => {
     const name = pseudoInput.trim();
     if (!name) return;
     friends.addFriend({ pseudo: name });
-    setFeedback(`« ${name} » ajouté. Renseigne son code plus tard pour pouvoir le défier.`);
+    setFeedback(`« ${name} » ajouté en attente. Renseigne son code plus tard pour pouvoir le défier et le confirmer.`);
     setPseudoInput('');
-    setTimeout(() => setFeedback(''), 3000);
+    setTimeout(() => setFeedback(''), 3500);
   };
 
   return (
@@ -354,19 +362,24 @@ function FriendsSection({ onChallenge }: { onChallenge: (pairCode: string) => vo
         {feedback && <p className="add-friend-feedback">{feedback}</p>}
       </div>
 
-      <div className="friends-list">
-        {friends.friends.length === 0 && (
-          <p style={{ color: 'var(--text-dim)', margin: '8px 0 0' }}>
-            Aucun ami pour l’instant. Échange ton code avec quelqu’un pour l’ajouter !
-          </p>
-        )}
-        {friends.friends.map((f) => (
+      {(() => {
+        // Rétro-compat : les amis enregistrés avant l'ajout du statut n'ont pas
+        // de champ `status` → on les traite comme déjà confirmés.
+        const confirmed = friends.friends.filter((f) => (f.status ?? 'confirmed') === 'confirmed');
+        const pending = friends.friends.filter((f) => (f.status ?? 'confirmed') === 'pending');
+
+        const row = (f: Friend) => (
           <div key={f.id} className="friend-row">
             <span className="friend-avatar">{f.avatar}</span>
             <div className="friend-info">
               <FriendName friend={f} onRename={(name) => friends.updateFriend(f.id, { pseudo: name })} />
               <span className="friend-code">{f.code || 'code non renseigné'}</span>
             </div>
+            {(f.status ?? 'confirmed') === 'pending' && (
+              <button title="Confirmer manuellement (sans jouer ensemble)" onClick={() => friends.confirmFriend(f.id)}>
+                ✓ Confirmer
+              </button>
+            )}
             {f.code ? (
               <button
                 className="primary"
@@ -380,8 +393,34 @@ function FriendsSection({ onChallenge }: { onChallenge: (pairCode: string) => vo
             )}
             <button title="Retirer" onClick={() => friends.removeFriend(f.id)}>🗑️</button>
           </div>
-        ))}
-      </div>
+        );
+
+        return (
+          <>
+            <div className="friends-list">
+              <h3 className="friends-subheading">Amis confirmés ({confirmed.length})</h3>
+              {confirmed.length === 0 && (
+                <p style={{ color: 'var(--text-dim)', margin: '4px 0 0' }}>
+                  Aucun ami confirmé pour l’instant. Échange ton code avec quelqu’un, puis jouez une partie ensemble (ou confirme à la main) !
+                </p>
+              )}
+              {confirmed.map(row)}
+            </div>
+
+            {pending.length > 0 && (
+              <div className="friends-list friends-list--pending">
+                <h3 className="friends-subheading">⏳ Demandes en attente ({pending.length})</h3>
+                <p className="friends-note" style={{ margin: '0 0 6px' }}>
+                  Ajoutés d’un seul côté (code collé, lien ouvert…) — rien ne prouve encore que c’est
+                  réciproque. Ils passent en « confirmé » automatiquement dès votre première partie
+                  ensemble, ou tu peux confirmer à la main.
+                </p>
+                {pending.map(row)}
+              </div>
+            )}
+          </>
+        );
+      })()}
       <p className="friends-note">
         Le défi ouvre un salon privé partagé : quand ton ami clique aussi sur « Défier » (ou reçoit le lien),
         vous vous retrouvez automatiquement — pas besoin de vous rééchanger un code.

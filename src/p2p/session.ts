@@ -52,6 +52,9 @@ export type P2PMessage =
   | { type: 'end'; winner: Color | null; reason: string }
   | { type: 'rematchOffer' }
   | { type: 'rematchAccept' }
+  | { type: 'friendRequest'; player: PlayerInfo }
+  | { type: 'friendRequestAccept'; player: PlayerInfo }
+  | { type: 'friendRequestDecline' }
   | { type: 'stateRequest' }
   | { type: 'state'; moves: string[]; clockW: number | null; clockB: number | null };
 

@@ -236,6 +236,8 @@
 .add-friend-feedback { margin: 8px 0 0; font-size: 13px; color: var(--accent); }
 
 .friends-list { display: flex; flex-direction: column; gap: 6px; }
+.friends-subheading { margin: 4px 0; font-size: 13px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.4px; }
+.friends-list--pending .friend-row { opacity: 0.85; border: 1px dashed rgba(212, 175, 55, 0.35); }
 .friend-row {
   display: flex;
   align-items: center;
