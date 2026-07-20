@@ -280,7 +280,7 @@ function Training({ pool }: { pool: Puzzle[] }) {
         </div>
         {puzzle && (
           <>
-            <p className="puzzle-goal">
+            <p className={`puzzle-goal ${solver.state === 'solved' ? 'solved' : solver.state === 'failed' ? 'failed' : ''}`}>
               {solver.state === 'solved'
                 ? '✅ Résolu ! Bien joué.'
                 : solver.state === 'failed'

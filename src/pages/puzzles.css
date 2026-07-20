@@ -6,8 +6,13 @@
   margin-bottom: 16px;
   justify-content: center;
 }
-.puzzle-tabs button { font-weight: 700; }
-.puzzle-tabs button.active { background: var(--accent); color: #fff; }
+.puzzle-tabs button { font-weight: 700; transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease; }
+.puzzle-tabs button.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.35), 0 4px 14px rgba(212, 175, 55, 0.18);
+}
+.puzzle-tabs button:hover { transform: translateY(-1px); }
 
 .puzzle-layout {
   display: grid;
@@ -25,14 +30,36 @@
 .puzzle-info { display: flex; flex-direction: column; gap: 8px; }
 
 .puzzle-elo-row { display: flex; justify-content: space-between; align-items: center; }
-.puzzle-elo { font-size: 26px; font-weight: 800; color: var(--accent); }
+.puzzle-elo {
+  font-size: 26px;
+  font-weight: 800;
+  background: var(--gradient-gold);
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transition: background-position 0.5s ease;
+}
+.puzzle-elo-row:hover .puzzle-elo { background-position: 100% center; }
 .puzzle-elo-label { color: var(--text-dim); font-size: 13px; }
-.puzzle-delta { margin-left: 10px; font-weight: 800; }
-.puzzle-delta.up { color: var(--accent); }
+.puzzle-delta { margin-left: 10px; font-weight: 800; animation: fadeInUp 0.3s ease both; }
+.puzzle-delta.up { color: var(--gold-light); }
 .puzzle-delta.down { color: var(--danger); }
-.puzzle-streak { font-size: 18px; font-weight: 700; }
+.puzzle-streak { font-size: 18px; font-weight: 700; transition: transform 0.2s ease; }
+.puzzle-streak:hover { transform: scale(1.08); }
 
-.puzzle-goal { font-size: 16px; font-weight: 600; margin: 4px 0; }
+.puzzle-goal { font-size: 16px; font-weight: 600; margin: 4px 0; transition: color 0.2s ease; }
+.puzzle-goal.solved {
+  color: var(--gold-light);
+  animation: fadeInUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both, goldPulse 1.8s ease-in-out 1;
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.14), transparent);
+}
+.puzzle-goal.failed {
+  color: var(--warning);
+  animation: fadeInUp 0.35s ease both;
+}
 
 .puzzle-themes { display: flex; flex-wrap: wrap; gap: 6px; }
 .puzzle-theme-chip {
