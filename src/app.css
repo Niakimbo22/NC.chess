@@ -99,7 +99,28 @@
 .app-main {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 20px;
+}
+
+/* ---- Transition entre pages (nav du bas, sidebar, ou swipe) ---- */
+.page-transition { animation: pageFade 0.22s ease both; }
+.page-transition--fwd { animation-name: pageSlideFwd; }
+.page-transition--back { animation-name: pageSlideBack; }
+@keyframes pageFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pageSlideFwd {
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes pageSlideBack {
+  from { opacity: 0; transform: translateX(-28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-transition, .page-transition--fwd, .page-transition--back { animation: none; }
 }
 
 /* ---- layout standard d'une page de jeu ---- */

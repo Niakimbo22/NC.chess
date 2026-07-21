@@ -44,6 +44,35 @@ export default function Analysis() {
   return <AnalysisHome onSelect={setMode} />;
 }
 
+// ---------------------------------------------------------------- Lignes du moteur
+
+function formatEval(cp: number): string {
+  if (cp >= 9000) return '+M';
+  if (cp <= -9000) return '-M';
+  return cp > 0 ? `+${(cp / 100).toFixed(1)}` : (cp / 100).toFixed(1);
+}
+
+function evalClass(cp: number): string {
+  if (cp > 40) return 'positive';
+  if (cp < -40) return 'negative';
+  return 'neutral';
+}
+
+function EngineLines({ lines }: { lines: { san: string[]; cp: number }[] }) {
+  if (lines.length === 0) return <p style={{ color: 'var(--text-dim)' }}>Calcul en cours…</p>;
+  return (
+    <>
+      {lines.map((l, i) => (
+        <div key={i} className="engine-line">
+          <span className="engine-line-rank">{i + 1}</span>
+          <span className={`engine-line-eval ${evalClass(l.cp)}`}>{formatEval(l.cp)}</span>
+          <span className="engine-line-moves">{l.san.join(' ')}</span>
+        </div>
+      ))}
+    </>
+  );
+}
+
 function pgnToSans(pgn: string): string[] | null {
   try {
     const chess = new Chess();
@@ -447,6 +476,10 @@ function FreeBoard({ startFen, onBack }: { startFen?: string; onBack: () => void
   return (
     <div className="review-layout">
       <div className="review-board-col">
+        <div className="freeboard-header">
+          <h1>♟️ Plateau libre</h1>
+          <button onClick={onBack}>← Retour</button>
+        </div>
         <div className="review-board-row">
           {settings.showEvalBar && <EvalBar cp={cp} flipped={flipped} />}
           <Chessboard
@@ -462,12 +495,17 @@ function FreeBoard({ startFen, onBack }: { startFen?: string; onBack: () => void
             arrows={bestArrow}
           />
         </div>
-        <div className="review-nav">
-          <button onClick={() => { chessRef.current.undo(); setFen(chessRef.current.fen()); }}>↩ Annuler</button>
-          <button onClick={() => { chessRef.current = new Chess(); setFen(chessRef.current.fen()); }}>♟ Départ</button>
-          <button onClick={() => setFlipped(!flipped)}>🔄</button>
-          <button onClick={() => navigator.clipboard.writeText(chessRef.current.fen())}>📋 FEN</button>
-          <button onClick={() => navigator.clipboard.writeText(chessRef.current.pgn())}>📋 PGN</button>
+        <div className="board-toolbar">
+          <div className="board-toolbar-group">
+            <button title="Annuler le dernier coup" aria-label="Annuler" onClick={() => { chessRef.current.undo(); setFen(chessRef.current.fen()); }}>↩</button>
+            <button title="Revenir à la position de départ" aria-label="Position de départ" onClick={() => { chessRef.current = new Chess(); setFen(chessRef.current.fen()); }}>♟</button>
+            <button title="Retourner l'échiquier" aria-label="Retourner l'échiquier" onClick={() => setFlipped(!flipped)}>🔄</button>
+          </div>
+          <div className="board-toolbar-sep" />
+          <div className="board-toolbar-group">
+            <button title="Copier la position (FEN)" onClick={() => navigator.clipboard.writeText(chessRef.current.fen())}>📋<span className="toolbar-text">FEN</span></button>
+            <button title="Copier la partie (PGN)" onClick={() => navigator.clipboard.writeText(chessRef.current.pgn())}>📋<span className="toolbar-text">PGN</span></button>
+          </div>
         </div>
         <form
           className="fen-form"
@@ -480,22 +518,16 @@ function FreeBoard({ startFen, onBack }: { startFen?: string; onBack: () => void
             }
           }}
         >
-          <input placeholder="Charger un FEN…" value={fenInput} onChange={(e) => setFenInput(e.target.value)} />
+          <input placeholder="Coller un FEN pour charger une position…" value={fenInput} onChange={(e) => setFenInput(e.target.value)} />
           <button type="submit">Charger</button>
         </form>
       </div>
       <div className="review-side-col">
         <div className="panel">
-          <h3 style={{ marginBottom: 8 }}>Lignes du moteur</h3>
-          {lines.length === 0 && <p style={{ color: 'var(--text-dim)' }}>Calcul…</p>}
-          {lines.map((l, i) => (
-            <div key={i} className="engine-line">
-              <span className="engine-line-eval">{l.cp >= 9000 ? '+M' : l.cp <= -9000 ? '-M' : (l.cp / 100).toFixed(1)}</span>
-              <span>{l.san.join(' ')}</span>
-            </div>
-          ))}
+          <div className="side-panel-title"><h3>🧠 Meilleurs coups</h3></div>
+          <p className="side-panel-hint">Ce que Stockfish jouerait à ta place, du meilleur au moins bon.</p>
+          <EngineLines lines={lines} />
         </div>
-        <button onClick={onBack}>← Retour</button>
       </div>
     </div>
   );
@@ -604,26 +636,21 @@ function ExploreBoard({
             arrows={bestArrow}
           />
         </div>
-        <div className="review-nav">
-          <button onClick={() => { chessRef.current.undo(); setFen(chessRef.current.fen()); }} disabled={!moved}>↩ Annuler</button>
-          <button onClick={reset} disabled={!moved}>⟲ Reprendre le scénario</button>
+        <div className="board-toolbar">
+          <div className="board-toolbar-group">
+            <button title="Annuler le dernier coup" aria-label="Annuler" onClick={() => { chessRef.current.undo(); setFen(chessRef.current.fen()); }} disabled={!moved}>↩</button>
+            <button title="Reprendre le scénario depuis le début" aria-label="Reprendre le scénario" onClick={reset} disabled={!moved}>⟲</button>
+          </div>
+          <div className="board-toolbar-sep" />
           <button className="primary" onClick={onClose}>← Revenir à la revue</button>
         </div>
       </div>
       <div className="review-side-col">
         <div className="panel">
-          <h3 style={{ marginBottom: 8 }}>Suggestions du moteur</h3>
-          {lines.length === 0 && <p style={{ color: 'var(--text-dim)' }}>Calcul…</p>}
-          {lines.map((l, i) => (
-            <div key={i} className="engine-line">
-              <span className="engine-line-eval">{l.cp >= 9000 ? '+M' : l.cp <= -9000 ? '-M' : (l.cp / 100).toFixed(1)}</span>
-              <span>{l.san.join(' ')}</span>
-            </div>
-          ))}
+          <div className="side-panel-title"><h3>🧠 Suggestions du moteur</h3></div>
+          <p className="side-panel-hint">Astuce : joue le coup que tu aurais aimé faire, puis regarde comment le moteur répond.</p>
+          <EngineLines lines={lines} />
         </div>
-        <p style={{ color: 'var(--text-dim)', fontSize: 13 }}>
-          Astuce : joue le coup que tu aurais aimé faire, puis regarde comment le moteur répond.
-        </p>
         <button onClick={onClose}>← Revenir à la revue</button>
       </div>
     </div>

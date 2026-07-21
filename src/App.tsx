@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import InstallPwaButton from './components/InstallPwaButton';
 import ShareButton from './components/ShareButton';
@@ -34,6 +34,18 @@ export default function App() {
 
   // Referme la feuille « Plus » à chaque changement de page.
   useEffect(() => setSheetOpen(false), [location.pathname]);
+
+  // Anime la transition entre pages : glissement vers la gauche/droite selon
+  // le sens du déplacement dans SWIPE_ORDER (cohérent avec le swipe tactile),
+  // simple fondu pour les pages hors de cet ordre.
+  const prevPathRef = useRef(location.pathname);
+  const [dir, setDir] = useState<'fwd' | 'back' | 'fade'>('fade');
+  useEffect(() => {
+    const prevIdx = SWIPE_ORDER.indexOf(prevPathRef.current);
+    const curIdx = SWIPE_ORDER.indexOf(location.pathname);
+    setDir(prevIdx === -1 || curIdx === -1 ? 'fade' : curIdx > prevIdx ? 'fwd' : 'back');
+    prevPathRef.current = location.pathname;
+  }, [location.pathname]);
 
   return (
     <div className="app-layout">
@@ -107,7 +119,9 @@ export default function App() {
       )}
 
       <main className="app-main">
-        <Outlet />
+        <div key={location.pathname} className={`page-transition page-transition--${dir}`}>
+          <Outlet />
+        </div>
       </main>
     </div>
   );

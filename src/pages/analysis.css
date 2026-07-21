@@ -51,7 +51,7 @@
 .review-board-row > .nc-board { flex: 1; }
 
 .review-nav { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
-.review-nav button { flex: 1; white-space: nowrap; }
+.review-nav button { flex: 1 1 auto; min-width: max-content; white-space: nowrap; }
 
 .review-side-col {
   display: flex;
@@ -129,20 +129,77 @@
 .fen-form { display: flex; gap: 6px; margin-top: 8px; }
 .fen-form input { flex: 1; font-family: monospace; font-size: 12px; }
 
+/* ---- Plateau libre / scénario alternatif : en-tête + barre d'outils ---- */
+.freeboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.freeboard-header h1 { margin: 0; font-size: 19px; }
+.freeboard-header button { font-size: 13px; padding: 7px 12px; }
+
+.board-toolbar { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.board-toolbar-group { display: flex; gap: 6px; }
+.board-toolbar-sep { width: 1px; align-self: stretch; min-height: 24px; background: var(--border); }
+.board-toolbar button {
+  flex: 0 0 auto;
+  min-width: 42px;
+  padding: 9px 12px;
+  font-size: 16px;
+  line-height: 1;
+}
+.board-toolbar button .toolbar-text { font-size: 12px; margin-left: 5px; vertical-align: middle; }
+
+.side-panel-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.side-panel-title h3 { margin: 0; font-size: 15px; }
+.side-panel-hint { margin: 0 0 8px; font-size: 12px; color: var(--text-dim); }
+
 .engine-line {
   display: flex;
-  gap: 10px;
-  padding: 5px 0;
-  font-size: 14px;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px 2px;
+  font-size: 13.5px;
+  line-height: 1.5;
   border-bottom: 1px solid var(--border);
 }
 .engine-line:last-child { border-bottom: none; }
+.engine-line-rank {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: var(--bg-panel-2);
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .engine-line-eval {
+  flex: 0 0 auto;
+  min-width: 44px;
+  text-align: center;
+  padding: 2px 6px;
+  border-radius: 5px;
   font-weight: 800;
-  min-width: 42px;
-  color: var(--accent);
+  font-size: 12.5px;
   font-variant-numeric: tabular-nums;
 }
+.engine-line-eval.positive { background: rgba(129, 182, 76, 0.18); color: #9bd66b; }
+.engine-line-eval.negative { background: rgba(220, 90, 90, 0.18); color: #e08080; }
+.engine-line-eval.neutral { background: var(--bg-panel-2); color: var(--text-dim); }
+.engine-line-moves { color: var(--text); word-break: break-word; }
 
 /* ---- Bilan de partie (narration détaillée) ---- */
 .review-summary {
