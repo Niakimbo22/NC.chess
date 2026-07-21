@@ -318,22 +318,24 @@ function BotGame({
   return (
     <div className="game-layout">
       <div className="game-board-col">
-        <PlayerBar
-          name={bot.name}
-          rating={bot.elo}
-          avatar={bot.avatar}
-          color={botColor}
-          history={game.history}
-          clockMs={game.clock?.[botColor]}
-          clockActive={game.clockRunning && game.turn === botColor && !game.result}
-          subtitle={botThinking ? 'réfléchit…' : undefined}
-        />
-        {botMessage && (
-          <div className="bot-speech" key={botMessage}>
-            <span className="bot-speech-avatar">{bot.avatar}</span>
-            <span className="bot-speech-text">{botMessage}</span>
-          </div>
-        )}
+        <div className="bot-speech-anchor">
+          <PlayerBar
+            name={bot.name}
+            rating={bot.elo}
+            avatar={bot.avatar}
+            color={botColor}
+            history={game.history}
+            clockMs={game.clock?.[botColor]}
+            clockActive={game.clockRunning && game.turn === botColor && !game.result}
+            subtitle={botThinking ? 'réfléchit…' : undefined}
+          />
+          {botMessage && (
+            <div className="bot-speech" key={botMessage}>
+              <span className="bot-speech-avatar">{bot.avatar}</span>
+              <span className="bot-speech-text">{botMessage}</span>
+            </div>
+          )}
+        </div>
         <Chessboard
           fen={game.viewFen}
           orientation={playerColor}

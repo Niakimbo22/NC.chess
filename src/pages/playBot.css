@@ -36,21 +36,31 @@
   from { opacity: 0; transform: translateY(-6px); }
 }
 
-/* Bulle de dialogue du bot : il « parle » juste sous sa barre de joueur. */
+/* Ancre pour la bulle de dialogue : positionnée en absolu pour ne jamais
+   pousser l'échiquier (sinon le plateau « saute » à chaque réplique). */
+.bot-speech-anchor { position: relative; }
+
+/* Bulle de dialogue du bot : flotte au-dessus de l'échiquier, juste sous
+   sa barre de joueur, sans jamais déplacer le reste de la mise en page. */
 .bot-speech {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 6;
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 6px 0 2px;
+  margin-top: 4px;
   padding: 9px 13px;
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.14), rgba(212, 175, 55, 0.05));
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: linear-gradient(135deg, rgba(30, 28, 22, 0.92), rgba(30, 28, 22, 0.86));
+  border: 1px solid rgba(212, 175, 55, 0.35);
   border-radius: 4px 14px 14px 14px;
   font-size: 14px;
   color: var(--text);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   animation: bot-speech-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  align-self: flex-start;
-  max-width: 100%;
+  max-width: 92%;
+  pointer-events: none;
 }
 .bot-speech-avatar { font-size: 22px; flex-shrink: 0; }
 .bot-speech-text { line-height: 1.3; }

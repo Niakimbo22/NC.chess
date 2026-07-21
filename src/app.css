@@ -209,7 +209,13 @@
   }
   .nav-sheet-sep { height: 1px; background: var(--border); margin: 6px 4px; }
   .app-main { padding: 10px; -webkit-overflow-scrolling: touch; }
-  .game-layout { grid-template-columns: 1fr; }
+  .game-layout { grid-template-columns: 1fr; gap: 10px; }
+  .game-board-col {
+    /* Le plateau (carré) est borné en hauteur pour tenir entier à l'écran,
+       comme sur Chess.com, au lieu de déborder et forcer un scroll. */
+    width: min(100%, calc(100dvh - 230px));
+    margin: 0 auto;
+  }
   .game-side-col { height: auto; position: static; }
   .home-hero h1 { font-size: 26px; }
 }
