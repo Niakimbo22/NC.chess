@@ -35,17 +35,27 @@ export default function App() {
   // Referme la feuille « Plus » à chaque changement de page.
   useEffect(() => setSheetOpen(false), [location.pathname]);
 
-  // Anime la transition entre pages : glissement vers la gauche/droite selon
-  // le sens du déplacement dans SWIPE_ORDER (cohérent avec le swipe tactile),
-  // simple fondu pour les pages hors de cet ordre.
-  const prevPathRef = useRef(location.pathname);
-  const [dir, setDir] = useState<'fwd' | 'back' | 'fade'>('fade');
-  useEffect(() => {
-    const prevIdx = SWIPE_ORDER.indexOf(prevPathRef.current);
+  // Sens de la transition entre pages : glissement gauche/droite selon le
+  // déplacement dans SWIPE_ORDER (cohérent avec le swipe tactile), simple
+  // fondu pour les pages hors de cet ordre.
+  //
+  // On calcule le sens PENDANT le rendu (mémorisé par route) et non dans un
+  // effet : sinon le conteneur se monte avec un ancien sens puis change de
+  // classe, ce qui relance l'animation CSS en plein vol → image figée/décalée
+  // sur les pages lourdes (ex. Réglages et ses aperçus de thèmes).
+  const navRef = useRef<{ path: string; dir: 'fwd' | 'back' | 'fade' }>({
+    path: location.pathname,
+    dir: 'fade',
+  });
+  if (navRef.current.path !== location.pathname) {
+    const prevIdx = SWIPE_ORDER.indexOf(navRef.current.path);
     const curIdx = SWIPE_ORDER.indexOf(location.pathname);
-    setDir(prevIdx === -1 || curIdx === -1 ? 'fade' : curIdx > prevIdx ? 'fwd' : 'back');
-    prevPathRef.current = location.pathname;
-  }, [location.pathname]);
+    navRef.current = {
+      path: location.pathname,
+      dir: prevIdx === -1 || curIdx === -1 ? 'fade' : curIdx > prevIdx ? 'fwd' : 'back',
+    };
+  }
+  const dir = navRef.current.dir;
 
   return (
     <div className="app-layout">

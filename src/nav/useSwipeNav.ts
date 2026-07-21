@@ -41,9 +41,12 @@ export function useSwipeNav(order: string[]) {
       tracking = false;
       const dx = e.changedTouches[0].clientX - startX;
       const dy = e.changedTouches[0].clientY - startY;
-      // Balayage horizontal net : au moins 70px et deux fois plus horizontal
-      // que vertical.
-      if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 2) return;
+      // Balayage horizontal franc et volontaire : il faut parcourir une bonne
+      // partie de la largeur de l'écran (≈ un tiers, plafonné à 140px) et le
+      // geste doit être nettement plus horizontal que vertical (2,5×). Évite
+      // les changements de page accidentels — le swipe était trop sensible.
+      const threshold = Math.min(140, Math.max(110, window.innerWidth * 0.33));
+      if (Math.abs(dx) < threshold || Math.abs(dx) < Math.abs(dy) * 2.5) return;
 
       const idx = order.indexOf(location.pathname);
       if (idx === -1) return;

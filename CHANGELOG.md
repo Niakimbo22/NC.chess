@@ -25,6 +25,14 @@ La version affichée dans l'app (sidebar + Réglages → À propos) provient de
   regroupée en icônes lisibles (plus de boutons au texte tronqué), vrai titre de
   page, et panneau « Lignes du moteur » remanié (rang, évaluation colorée,
   meilleure ligne aérée) pour qu'on comprenne enfin ce qu'on regarde.
+- **Navigation par glissement moins sensible** : il faut désormais un balayage
+  franc (environ un tiers de l'écran) pour changer de page, ce qui évite les
+  changements accidentels.
+
+### Corrigé
+- **Transition de page figée/décalée** sur les écrans lourds (ex. Réglages) :
+  le sens de l'animation est calculé au montage, l'animation ne se relance plus
+  en plein vol.
 
 ## [0.0.2] — 2026-07-20
 
