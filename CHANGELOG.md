@@ -8,6 +8,24 @@ et le versionnage suit [SemVer](https://semver.org/lang/fr/) :
 La version affichée dans l'app (sidebar + Réglages → À propos) provient de
 `package.json`.
 
+## [0.0.3] — 2026-07-21
+
+### Ajouté
+- **Vraies demandes d'ami** : distinction entre amis « en attente » et
+  « confirmés ». Une demande envoyée pendant une partie peut être acceptée ou
+  refusée en direct par l'adversaire ; les ajouts par code, lien ou pseudo
+  restent « en attente » jusqu'à confirmation (première partie ensemble ou
+  validation manuelle). Le profil sépare désormais les deux listes.
+- **Animation de transition entre les pages** : glissement + fondu au
+  changement de menu, que ce soit par glissement tactile ou par clic — au lieu
+  d'un changement de page instantané et sec.
+
+### Modifié
+- **Refonte de l'écran Analyse (plateau libre & « Et si ? »)** : barre d'outils
+  regroupée en icônes lisibles (plus de boutons au texte tronqué), vrai titre de
+  page, et panneau « Lignes du moteur » remanié (rang, évaluation colorée,
+  meilleure ligne aérée) pour qu'on comprenne enfin ce qu'on regarde.
+
 ## [0.0.2] — 2026-07-20
 
 ### Ajouté
