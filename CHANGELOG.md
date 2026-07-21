@@ -30,9 +30,13 @@ La version affichée dans l'app (sidebar + Réglages → À propos) provient de
   changements accidentels.
 
 ### Corrigé
+- **Page qui se décalait horizontalement** (surtout Réglages) : le sélecteur de
+  voix du coach refusait de se rétrécir et poussait la page au-delà de l'écran,
+  la rendant scrollable de travers. Le sélecteur s'adapte désormais, et un
+  garde-fou global empêche toute page de défiler latéralement.
 - **Transition de page figée/décalée** sur les écrans lourds (ex. Réglages) :
-  le sens de l'animation est calculé au montage, l'animation ne se relance plus
-  en plein vol.
+  le sens de l'animation est calculé au montage (plus de relance en plein vol),
+  et l'ancienne animation d'entrée qui la parasitait a été retirée.
 
 ## [0.0.2] — 2026-07-20
 

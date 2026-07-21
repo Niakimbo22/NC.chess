@@ -148,10 +148,10 @@ function VoicePicker() {
   }
 
   return (
-    <div className="slider-row" style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+    <div className="slider-row" style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
       <span>Voix :</span>
       <select
-        style={{ flex: 1 }}
+        style={{ flex: '1 1 160px', minWidth: 0 }}
         value={s.coachVoiceName ?? ''}
         onChange={(e) => {
           s.set({ coachVoiceName: e.target.value || null });

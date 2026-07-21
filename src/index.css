@@ -53,9 +53,9 @@ body {
   50% { box-shadow: 0 0 16px 1px rgba(212, 175, 55, 0.35); }
 }
 
-.app-main > * {
-  animation: fadeInUp 0.4s cubic-bezier(0.2, 0.7, 0.3, 1) both;
-}
+/* L'animation d'entrée des pages est gérée par `.page-transition` (App.tsx) :
+   cette ancienne règle sur `.app-main > *` la parasitait (translateY qui
+   écrasait le glissement horizontal). */
 
 .gold-text {
   background: var(--gradient-gold);

@@ -1,6 +1,7 @@
 .app-layout {
   display: flex;
   height: 100%;
+  overflow-x: hidden;
 }
 
 .app-sidebar {
@@ -98,8 +99,9 @@
 
 .app-main {
   flex: 1;
+  min-width: 0; /* empêche un enfant trop large d'étirer la colonne (flex) */
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: hidden; /* filet de sécurité : aucune page ne peut scroller latéralement */
   padding: 20px;
 }
 
