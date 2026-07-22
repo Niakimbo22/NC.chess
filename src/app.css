@@ -212,6 +212,20 @@
   .game-layout { grid-template-columns: 1fr; }
   .game-side-col { height: auto; position: static; }
   .home-hero h1 { font-size: 26px; }
+
+  /* Barre d'actions toujours accessible sans avoir à scroller (coup suivant,
+     indice, abandon…) : reste collée au bas de l'écran visible. */
+  .game-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 6;
+    background: var(--bg-panel);
+    margin: 4px -10px -10px;
+    padding: 10px;
+    border-top: 1px solid var(--border);
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.35);
+  }
 }
 
 @keyframes sheetFade {

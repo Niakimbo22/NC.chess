@@ -228,14 +228,25 @@ function PuzzleConfetti({ trigger }: { trigger: boolean }) {
 
 function PuzzleBoardPanel({
   solver,
+  puzzleKey,
   children,
 }: {
   solver: ReturnType<typeof usePuzzleSolver>;
+  puzzleKey?: string;
   children: React.ReactNode;
 }) {
+  const boardRef = useRef<HTMLDivElement>(null);
+
+  // Ramène l'échiquier en haut de l'écran à chaque nouveau puzzle : on évite
+  // à l'utilisateur d'avoir à remonter manuellement après avoir scrollé pour
+  // accéder aux infos ou changer de thème.
+  useEffect(() => {
+    boardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [puzzleKey]);
+
   return (
     <div className="puzzle-layout">
-      <div className="puzzle-board">
+      <div className="puzzle-board" ref={boardRef}>
         <Chessboard
           fen={solver.fen || new Chess().fen()}
           orientation={solver.playerColor}
@@ -299,7 +310,7 @@ function Training({ pool }: { pool: Puzzle[] }) {
   });
 
   return (
-    <PuzzleBoardPanel solver={solver}>
+    <PuzzleBoardPanel solver={solver} puzzleKey={puzzle?.id}>
       <div className="panel puzzle-info">
         <div className="puzzle-elo-row">
           <div>
@@ -457,7 +468,7 @@ function Rush({ pool }: { pool: Puzzle[] }) {
   const sec = Math.floor((timeLeft % 60000) / 1000);
 
   return (
-    <PuzzleBoardPanel solver={solver}>
+    <PuzzleBoardPanel solver={solver} puzzleKey={puzzle?.id}>
       <div className="panel puzzle-info">
         <div className="rush-header">
           <span className={`rush-timer ${timeLeft < 30000 ? 'low' : ''}`}>{min}:{String(sec).padStart(2, '0')}</span>
@@ -493,7 +504,7 @@ function Daily({ pool }: { pool: Puzzle[] }) {
   });
 
   return (
-    <PuzzleBoardPanel solver={solver}>
+    <PuzzleBoardPanel solver={solver} puzzleKey={puzzle.id}>
       <div className="panel puzzle-info">
         <h2>📅 Puzzle du jour</h2>
         <p style={{ color: 'var(--text-dim)' }}>{new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
