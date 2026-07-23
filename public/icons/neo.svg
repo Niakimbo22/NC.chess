@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="neoGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f5db8f"/>
+      <stop offset="45%" stop-color="#d4af37"/>
+      <stop offset="70%" stop-color="#a8842a"/>
+      <stop offset="100%" stop-color="#f5db8f"/>
+    </linearGradient>
+    <radialGradient id="neoBg" cx="34%" cy="28%" r="85%">
+      <stop offset="0%" stop-color="#33302b"/>
+      <stop offset="100%" stop-color="#141310"/>
+    </radialGradient>
+    <linearGradient id="neoSpark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eafff2"/>
+      <stop offset="100%" stop-color="#81b64c"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="49" fill="url(#neoBg)"/>
+  <circle cx="50" cy="50" r="45.5" fill="none" stroke="url(#neoGold)" stroke-width="3"/>
+  <!-- Cavalier doré (profil) -->
+  <g transform="translate(50 53) scale(1.7) translate(-22 -24)" fill="url(#neoGold)">
+    <path d="M22 10c10.5 1 16.5 8 16 29H15c0-9 10-6.5 8-21"/>
+    <path d="M24 18c.38 2.91-5.55 7.37-8 9-3 2-2.82 4.34-5 4-1.042-.94 1.41-3.04 0-3-1 0 .19 1.23-1 2-1 0-4.003 1-4-4 0-2 6-12 6-12s1.89-1.9 2-3.5c-.73-.994-.5-2-.5-3 1-1 3 2.5 3 2.5h2s.78-1.992 2.5-3c1 0 1 3 1 3"/>
+  </g>
+  <!-- Œil du cavalier -->
+  <circle cx="43.5" cy="40" r="2.4" fill="#141310"/>
+  <circle cx="44.2" cy="39.2" r="0.8" fill="#f5db8f"/>
+  <!-- Étincelle ⚡ (l'énergie de Néo) -->
+  <path d="M70 20l-7 11h5l-6 12 13-15h-6l7-9z" fill="url(#neoSpark)" stroke="#141310" stroke-width="0.8" stroke-linejoin="round"/>
+</svg>

@@ -12,7 +12,16 @@ import {
 } from '../data/puzzleDb';
 import { useProfile } from '../store/profile';
 import { playSound } from '../audio/sounds';
+import MascotSpeech from '../components/MascotSpeech';
+import { neoSay, type NeoMood } from '../mascot/neo';
 import './puzzles.css';
+
+type NeoTone = 'neutral' | 'success' | 'warn';
+function moodTone(mood: NeoMood): NeoTone {
+  if (mood === 'solved' || mood === 'solvedAfterMiss' || mood === 'streak') return 'success';
+  if (mood === 'mistake' || mood === 'solution') return 'warn';
+  return 'neutral';
+}
 
 type Tab = 'training' | 'rush' | 'daily';
 
@@ -61,7 +70,13 @@ function usePuzzleSolver(puzzle: Puzzle | null, cb: SolverCallbacks) {
   const [wrongSquare, setWrongSquare] = useState<Square | null>(null);
   const [hintLevel, setHintLevel] = useState(0);
   const [playerColor, setPlayerColor] = useState<Color>('w');
+  const [neo, setNeoState] = useState<{ text: string; tone: NeoTone }>({ text: '', tone: 'neutral' });
   const timeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // Fait parler Néo (la mascotte) selon l'humeur du moment.
+  const setNeo = useCallback((mood: NeoMood, color?: Color) => {
+    setNeoState({ text: neoSay(mood, color), tone: moodTone(mood) });
+  }, []);
 
   const clearTimers = () => {
     timeouts.current.forEach(clearTimeout);
@@ -81,7 +96,9 @@ function usePuzzleSolver(puzzle: Puzzle | null, cb: SolverCallbacks) {
     setWrongSquare(null);
     setLastMove(null);
     setMoveIndex(0);
-    setPlayerColor(chess.turn() === 'w' ? 'b' : 'w');
+    const color: Color = chess.turn() === 'w' ? 'b' : 'w';
+    setPlayerColor(color);
+    setNeo('intro', color);
     const t = setTimeout(() => {
       const first = puzzle.moves[0];
       const m = chess.move({ from: first.slice(0, 2), to: first.slice(2, 4), promotion: first.length > 4 ? (first[4] as 'q') : undefined });
@@ -120,6 +137,7 @@ function usePuzzleSolver(puzzle: Puzzle | null, cb: SolverCallbacks) {
         if (isAltMate || nextIndex >= puzzle.moves.length) {
           setState('solved');
           playSound('Victory');
+          setNeo(mistakeMade ? 'solvedAfterMiss' : 'solved');
           cb.onSolved(!mistakeMade);
           return;
         }
@@ -139,6 +157,7 @@ function usePuzzleSolver(puzzle: Puzzle | null, cb: SolverCallbacks) {
         setFen(chess.fen());
         setWrongSquare(move.to);
         playSound('Error');
+        setNeo('mistake');
         if (!mistakeMade) {
           setMistakeMade(true);
           cb.onFirstMistake?.();
@@ -160,6 +179,7 @@ function usePuzzleSolver(puzzle: Puzzle | null, cb: SolverCallbacks) {
       setMistakeMade(true);
       cb.onFirstMistake?.();
     }
+    setNeo('solution');
     const chess = chessRef.current;
     let idx = moveIndex;
     const step = () => {
@@ -180,7 +200,8 @@ function usePuzzleSolver(puzzle: Puzzle | null, cb: SolverCallbacks) {
   const hint = useCallback(() => {
     if (!puzzle || state !== 'playing') return;
     setHintLevel((h) => Math.min(2, h + 1));
-  }, [puzzle, state]);
+    setNeo('hint');
+  }, [puzzle, state, setNeo]);
 
   const hintData = useMemo((): { marked: Square[]; arrows: Arrow[] } => {
     if (!puzzle || hintLevel === 0 || state !== 'playing') return { marked: [], arrows: [] };
@@ -192,7 +213,7 @@ function usePuzzleSolver(puzzle: Puzzle | null, cb: SolverCallbacks) {
     return { marked: [], arrows: [{ from, to, color: 'rgba(61, 159, 232, 0.85)' }] };
   }, [puzzle, hintLevel, moveIndex, state]);
 
-  return { fen, state, playerColor, lastMove, wrongSquare, onMove, showSolution, hint, hintData, mistakeMade };
+  return { fen, state, playerColor, lastMove, wrongSquare, onMove, showSolution, hint, hintData, mistakeMade, neo, setNeo };
 }
 
 /** Petite explosion de confettis dorés/verts, jouée une fois à chaque passage à "solved" */
@@ -309,6 +330,12 @@ function Training({ pool }: { pool: Puzzle[] }) {
     },
   });
 
+  // Sur un palier de série (3, 6, 9…), Néo passe en mode « en feu ».
+  useEffect(() => {
+    if (streak > 0 && streak % 3 === 0) solver.setNeo('streak');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [streak]);
+
   return (
     <PuzzleBoardPanel solver={solver} puzzleKey={puzzle?.id}>
       <div className="panel puzzle-info">
@@ -326,13 +353,7 @@ function Training({ pool }: { pool: Puzzle[] }) {
         </div>
         {puzzle && (
           <>
-            <p className={`puzzle-goal ${solver.state === 'solved' ? 'solved' : solver.state === 'failed' ? 'failed' : ''}`}>
-              {solver.state === 'solved'
-                ? '✅ Résolu ! Bien joué.'
-                : solver.state === 'failed'
-                ? 'Voici la solution. Retiens l’idée !'
-                : `${solver.playerColor === 'w' ? 'Les blancs' : 'Les noirs'} jouent et gagnent.`}
-            </p>
+            <MascotSpeech text={solver.neo.text} tone={solver.neo.tone} />
             <div className="puzzle-themes">
               {puzzle.themes.slice(0, 4).map((t) => (
                 <span key={t} className="puzzle-theme-chip">{THEME_FR[t] ?? t}</span>
@@ -455,6 +476,10 @@ function Rush({ pool }: { pool: Puzzle[] }) {
   if (!running) {
     return (
       <div className="rush-splash panel">
+        <MascotSpeech
+          text={finished ? (score > profile.puzzleRushBest ? neoSay('streak') : neoSay('solvedAfterMiss')) : neoSay('welcome')}
+          tone={finished && score > profile.puzzleRushBest ? 'success' : 'neutral'}
+        />
         <h2>⚡ Puzzle Rush</h2>
         <p>Résous un maximum de puzzles en 5 minutes. 3 erreurs et c'est fini !</p>
         <p>Record : <strong>{profile.puzzleRushBest}</strong></p>
@@ -479,9 +504,7 @@ function Rush({ pool }: { pool: Puzzle[] }) {
             ))}
           </span>
         </div>
-        <p className="puzzle-goal">
-          {solver.playerColor === 'w' ? 'Les blancs jouent.' : 'Les noirs jouent.'}
-        </p>
+        <MascotSpeech text={solver.neo.text} tone={solver.neo.tone} compact />
       </div>
       <button onClick={endRush}>Arrêter</button>
     </PuzzleBoardPanel>
@@ -510,12 +533,8 @@ function Daily({ pool }: { pool: Puzzle[] }) {
         <p style={{ color: 'var(--text-dim)' }}>{new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
         {done && solver.state !== 'playing' ? (
           <p className="puzzle-goal solved">✅ Puzzle du jour réussi ! Reviens demain.</p>
-        ) : done ? (
-          <p className="puzzle-goal">Déjà résolu aujourd'hui — mais tu peux le refaire !</p>
         ) : (
-          <p className={`puzzle-goal ${solver.state === 'failed' ? 'failed' : ''}`}>
-            {solver.playerColor === 'w' ? 'Les blancs' : 'Les noirs'} jouent et gagnent.
-          </p>
+          <MascotSpeech text={solver.neo.text} tone={solver.neo.tone} />
         )}
         <p style={{ fontSize: 13, color: 'var(--text-dim)' }}>Difficulté : {puzzle.rating}</p>
         {solver.state !== 'playing' && (

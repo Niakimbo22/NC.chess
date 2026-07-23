@@ -1,5 +1,8 @@
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useProfile } from '../store/profile';
+import MascotSpeech from '../components/MascotSpeech';
+import { neoSay } from '../mascot/neo';
 import './home.css';
 
 const CARDS = [
@@ -14,6 +17,7 @@ const CARDS = [
 export default function Home() {
   const profile = useProfile();
   const dailyDone = localStorage.getItem('ncchess-daily') === new Date().toISOString().slice(0, 10);
+  const neoWelcome = useMemo(() => neoSay('welcome'), []);
 
   return (
     <div className="home">
@@ -22,6 +26,7 @@ export default function Home() {
           Bienvenue, <span className="brand">{profile.pseudo}</span> {profile.avatar}
         </h1>
         <p>Toutes les fonctionnalités premium des échecs, 100 % gratuites. Entraîne-toi, joue, progresse.</p>
+        <div className="home-neo"><MascotSpeech text={neoWelcome} /></div>
         <div className="home-stats">
           <Link to="/profile" className="home-stat">
             <span className="home-stat-value">{profile.elo}</span>

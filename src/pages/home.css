@@ -16,6 +16,12 @@
 }
 .home-hero p { color: var(--text-dim); font-size: 17px; }
 
+.home-neo {
+  max-width: 460px;
+  margin: 18px auto 0;
+  text-align: left;
+}
+
 .home-stats {
   display: flex;
   gap: 12px;
