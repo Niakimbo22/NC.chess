@@ -1,0 +1,86 @@
+/* Carte vedette du mode « Jouer contre Néo » — pièce maîtresse dorée et vivante. */
+.neo-feature {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 22px 26px;
+  margin-bottom: 20px;
+  border-radius: 20px;
+  color: var(--text);
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(130% 160% at 88% -30%, rgba(212, 175, 55, 0.22), transparent 55%),
+    linear-gradient(135deg, var(--bg-panel), #1c1b18 80%);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.35);
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+  animation: fadeInUp 0.5s ease both;
+}
+.neo-feature::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 42%, rgba(245, 219, 143, 0.14) 50%, transparent 58%);
+  background-size: 300% 100%;
+  background-position: -60% 0;
+  animation: goldShimmer 7s linear infinite;
+  pointer-events: none;
+}
+.neo-feature:hover {
+  transform: translateY(-4px);
+  border-color: rgba(212, 175, 55, 0.6);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.4), 0 0 30px rgba(212, 175, 55, 0.18);
+}
+
+.neo-feature-avatar {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  flex-shrink: 0;
+  animation: neoFloat 4s ease-in-out infinite;
+}
+.neo-feature-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.4), 0 0 34px rgba(212, 175, 55, 0.4);
+}
+.neo-feature-spark {
+  position: absolute;
+  top: -2px;
+  right: 2px;
+  font-size: 26px;
+  filter: drop-shadow(0 0 6px rgba(245, 219, 143, 0.85));
+  animation: sparkPulse 2.2s ease-in-out infinite;
+}
+.neo-feature:hover .neo-feature-avatar { animation-duration: 2.4s; }
+
+.neo-feature-text { flex: 1; min-width: 0; }
+.neo-feature-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: #1c1b18;
+  background: var(--gradient-gold);
+  background-size: 250% auto;
+  animation: goldShimmer 4s linear infinite;
+  margin-bottom: 8px;
+}
+.neo-feature-text h2 { font-size: 26px; margin: 0 0 6px; }
+.neo-feature-text p { margin: 0 0 12px; color: var(--text-dim); font-size: 15px; line-height: 1.5; }
+.neo-feature-cta {
+  font-weight: 700;
+  color: var(--gold-light);
+  transition: letter-spacing 0.2s ease;
+}
+.neo-feature:hover .neo-feature-cta { letter-spacing: 0.4px; }
+
+@media (max-width: 900px) {
+  .neo-feature { flex-direction: column; text-align: center; padding: 20px 18px; gap: 14px; }
+  .neo-feature-text h2 { font-size: 22px; }
+}

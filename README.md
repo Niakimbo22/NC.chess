@@ -5,6 +5,7 @@
 ## Fonctionnalités
 
 ### ♟️ Jouer
+- **Contre Néo, la mascotte** : le mode le plus éducatif. Le cavalier doré joue contre toi **et** t'accompagne — 5 niveaux/styles (600 → 2400 Elo), avertissement avant une gaffe (« ça laisse ta dame en prise »), félicitations sur tes bons coups, indice fléché doré et conseils contextuels à la demande.
 - **13 IA à personnalités** de 250 à 3200 Elo (Stockfish 18 WASM) : chacune a son style, ses gaffes ou sa précision. Indice, reprise de coup, nulle négociée avec le moteur, revanche, parties classées.
 - **Entre amis, sans serveur** : crée un salon, partage le **code à 4 lettres** (ex. `AF3P`) ou le lien d'invitation — connexion directe WebRTC (PeerJS), chat, synchro pendule, revanche, reconnexion automatique.
 - **Sur le même écran** : mode « pass and play ».

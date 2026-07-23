@@ -39,6 +39,31 @@ body {
   overscroll-behavior: none;
 }
 
+/* Halo doré ambiant qui dérive lentement : l'app « respire » sur toutes les
+   pages, sans jamais gêner la lecture (couche fixe, très diffuse, en fond). */
+body::before {
+  content: '';
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(closest-side, rgba(212, 175, 55, 0.10), transparent),
+    radial-gradient(closest-side, rgba(129, 182, 76, 0.07), transparent);
+  background-size: 55% 55%, 45% 45%;
+  background-position: 12% 8%, 88% 78%;
+  background-repeat: no-repeat;
+  animation: ambientDrift 26s ease-in-out infinite alternate;
+}
+@keyframes ambientDrift {
+  0% { background-position: 10% 6%, 90% 80%; }
+  50% { background-position: 24% 20%, 74% 62%; }
+  100% { background-position: 8% 14%, 92% 88%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body::before { animation: none; }
+}
+
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: translateY(0); }

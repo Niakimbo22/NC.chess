@@ -6,6 +6,7 @@ import { neoSay } from '../mascot/neo';
 import './home.css';
 
 const CARDS = [
+  { to: '/play/neo', icon: '♞', title: 'Jouer contre Néo', desc: 'Une partie guidée par ton cavalier coach. Le mode le plus éducatif.' },
   { to: '/play/bot', icon: '🤖', title: 'Jouer contre une IA', desc: 'Des bots de tous les niveaux, du débutant au grand maître.' },
   { to: '/play/friend', icon: '👥', title: 'Jouer entre amis', desc: 'Crée un salon avec un code (ex. AF3P) et joue en direct.' },
   { to: '/play/local', icon: '🪑', title: 'Sur le même écran', desc: 'Deux joueurs, un seul appareil, chacun son tour.' },

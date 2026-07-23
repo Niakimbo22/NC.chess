@@ -1,7 +1,7 @@
 export interface SavedGame {
   id: string;
   date: number;
-  mode: 'local' | 'bot' | 'p2p';
+  mode: 'local' | 'bot' | 'p2p' | 'neo';
   white: string;
   black: string;
   pgn: string;

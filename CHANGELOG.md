@@ -8,6 +8,24 @@ et le versionnage suit [SemVer](https://semver.org/lang/fr/) :
 La version affichée dans l'app (sidebar + Réglages → À propos) provient de
 `package.json`.
 
+## [0.1.0] — 2026-07-23
+
+### Ajouté
+- **Mode « Jouer contre Néo »** : une partie guidée par la mascotte, le cavalier
+  doré, pensée comme le mode le plus éducatif de l'app. Néo joue contre toi tout
+  en t'accompagnant en direct :
+  - **5 niveaux/styles** de Néo, de « Néo Éveil » (600 Elo, mentor patient qui
+    prévient avant chaque erreur) à « Néo Maître » (2400 Elo, aucun filet).
+  - **Avertissement pédagogique avant une gaffe** : Néo t'interrompt, explique
+    ce qui cloche (« ça laisse ta dame en prise »), propose le meilleur coup, et
+    te laisse reprendre ou jouer quand même.
+  - **Réactions en direct** : félicitations sur un bon/meilleur coup, petit mot
+    sur une imprécision, commentaires quand Néo attaque.
+  - **Conseils à la demande** : indice fléché doré sur l'échiquier, ou message
+    de conseil contextuel de Néo (ouverture, avantage, finale…), lu à voix haute.
+- **Direction artistique dorée** : carte vedette animée du mode Néo, halo doré
+  ambiant qui dérive doucement en fond sur toutes les pages (l'app « respire »).
+
 ## [0.0.2] — 2026-07-20
 
 ### Ajouté
