@@ -69,3 +69,28 @@
 .lesson-msg { border-radius: var(--radius); padding: 8px 10px; font-size: 14px; }
 .lesson-msg.hint { background: rgba(232, 163, 61, 0.15); border-left: 3px solid var(--warning); }
 .lesson-msg.success { background: rgba(129, 182, 76, 0.15); border-left: 3px solid var(--accent); }
+
+/* Passerelle vers les Défis : les leçons expliquent, les défis entraînent. */
+.lesson-drills-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 18px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--text);
+  background:
+    radial-gradient(120% 160% at 0% 0%, rgba(212, 175, 55, 0.15), transparent 62%),
+    var(--bg-panel);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+.lesson-drills-link:hover { transform: translateY(-2px); border-color: rgba(212, 175, 55, 0.6); }
+.lesson-drills-link span { display: block; font-size: 13px; color: var(--text-dim); line-height: 1.45; }
+.lesson-drills-link strong { display: block; font-size: 15px; color: var(--text); }
+.lesson-drills-link em { color: var(--gold-light); font-style: normal; font-weight: 700; }
+.lesson-drills-cta { margin-left: auto; font-size: 20px; color: var(--gold); }
+@media (prefers-reduced-motion: reduce) {
+  .lesson-drills-link:hover { transform: none; }
+}

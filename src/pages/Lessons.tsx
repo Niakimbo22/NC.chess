@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Chess, type Square } from 'chess.js';
 import Chessboard, { type Arrow, type BoardMove } from '../components/board/Chessboard';
 import NeoAvatar from '../components/NeoAvatar';
@@ -52,6 +53,14 @@ export default function Lessons() {
       <p style={{ color: 'var(--text-dim)' }}>
         Des cours interactifs avec ton coach — {done.size}/{LESSONS.length} terminés.
       </p>
+      <Link to="/drills" className="lesson-drills-link">
+        <NeoAvatar size={40} spark />
+        <span>
+          <strong>🎯 Envie de t’entraîner ?</strong>
+          Les <em>Défis</em> de Néo : des exercices ciblés, une compétence à la fois.
+        </span>
+        <span className="lesson-drills-cta">→</span>
+      </Link>
       {categories.map((cat) => (
         <section key={cat}>
           <h2 className="lesson-category">{cat}</h2>

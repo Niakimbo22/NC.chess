@@ -27,6 +27,8 @@ interface Props {
   arrows?: Arrow[];
   /** Cases à marquer en externe (leçons, puzzles) */
   markedSquares?: Square[];
+  /** Case de réussite : pastille verte ✓ (défis) */
+  successSquare?: Square | null;
   interactive?: boolean;
 }
 
@@ -59,6 +61,7 @@ export default function Chessboard({
   lastMove,
   arrows = [],
   markedSquares = [],
+  successSquare = null,
   interactive = true,
 }: Props) {
   const settings = useSettings();
@@ -297,6 +300,7 @@ export default function Chessboard({
           {isPremove && <div className="nc-overlay" style={{ background: 'rgba(30, 130, 230, 0.45)' }} />}
           {isMarked && <div className="nc-overlay" style={{ background: 'rgba(224, 40, 40, 0.55)' }} />}
           {isCheck && <div className="nc-overlay nc-check" />}
+          {successSquare === square && <span className="nc-success-badge">✓</span>}
           {settings.showLegalMoves && legalTargets.has(square) && (
             <div className={chess.get(square) ? 'nc-capture-hint' : 'nc-move-hint'} />
           )}

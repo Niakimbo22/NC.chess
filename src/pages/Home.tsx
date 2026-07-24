@@ -11,6 +11,7 @@ const CARDS = [
   { to: '/play/friend', icon: '👥', title: 'Jouer entre amis', desc: 'Crée un salon avec un code (ex. AF3P) et joue en direct.' },
   { to: '/play/local', icon: '🪑', title: 'Sur le même écran', desc: 'Deux joueurs, un seul appareil, chacun son tour.' },
   { to: '/puzzles', icon: '🧩', title: 'Puzzles illimités', desc: 'Des milliers d’exercices tactiques pour progresser.' },
+  { to: '/drills', icon: '🎯', title: 'Défis', desc: 'Des exercices ciblés, une compétence à la fois, avec Néo comme instructeur.' },
   { to: '/lessons', icon: '🎓', title: 'Leçons', desc: 'Apprends les ouvertures, tactiques et finales avec le coach.' },
   { to: '/analysis', icon: '📊', title: 'Analyse', desc: 'Analyse illimitée de tes parties avec Stockfish.' },
 ];

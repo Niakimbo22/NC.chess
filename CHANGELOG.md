@@ -8,6 +8,31 @@ et le versionnage suit [SemVer](https://semver.org/lang/fr/) :
 La version affichée dans l'app (sidebar + Réglages → À propos) provient de
 `package.json`.
 
+## [0.2.0] — 2026-07-24
+
+### Ajouté
+- **Mode « Défis »** (`/drills`) : l'entraînement ciblé, une compétence à la
+  fois, avec Néo comme instructeur. **6 modules, 52 exercices** :
+  - 🎯 **Prendre des pièces** (10), 🛡️ **Prendre sans risque** (8),
+    ⚔️ **Donner échec** (8), 🚨 **Parer un échec** (8),
+    👑 **Mat en un coup** (10), 🍴 **La fourchette** (8).
+  - Écran d'accueil de module : Néo présente la compétence sur une position
+    d'exemple avant de lancer la série.
+  - À chaque défi : la **consigne de Néo**, le camp au trait, une **flèche de
+    démonstration** sur le premier exercice, une **indication** à la demande.
+  - Coup juste → pastille verte ✓ sur la case, verdict en notation figurine
+    (« ♖xf5 est correct ») et commentaire de Néo. Coup faux → la position
+    revient et Néo explique quoi chercher.
+  - **Score par module** (réussites du premier coup) mémorisé en local, barre de
+    progression sur chaque carte, bilan commenté par Néo en fin de série.
+- Entrées vers les Défis depuis l'accueil, la navigation (« 🎯 Défis ») et la
+  page Leçons.
+
+### Fiabilité
+- Chaque position de défi est **vérifiée par les tests** : coups acceptés légaux,
+  flèche de démonstration cohérente, échec uniquement dans le module dédié, mats
+  en un exhaustifs, prises sans perte de matériel après reprise.
+
 ## [0.1.0] — 2026-07-23
 
 ### Ajouté

@@ -12,6 +12,7 @@ import Settings from './pages/Settings';
 import Analysis from './pages/Analysis';
 import Puzzles from './pages/Puzzles';
 import Lessons from './pages/Lessons';
+import Drills from './pages/Drills';
 import Openings from './pages/Openings';
 import Profile from './pages/Profile';
 import './index.css';
@@ -29,6 +30,7 @@ const router = createHashRouter([
       { path: 'play/friend', element: <PlayFriend /> },
       { path: 'puzzles', element: <Puzzles /> },
       { path: 'lessons', element: <Lessons /> },
+      { path: 'drills', element: <Drills /> },
       { path: 'analysis', element: <Analysis /> },
       { path: 'openings', element: <Openings /> },
       { path: 'profile', element: <Profile /> },

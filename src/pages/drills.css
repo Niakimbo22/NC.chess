@@ -1,0 +1,326 @@
+/* Mode « Défis » : l'entraînement ciblé avec Néo comme instructeur. */
+
+.drills-page { max-width: 1000px; margin: 0 auto; padding-bottom: 40px; }
+
+.drills-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+  border-radius: var(--radius);
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(212, 175, 55, 0.16), transparent 60%),
+    var(--bg-panel);
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  animation: fadeInUp 0.45s ease both;
+}
+.drills-hero h1 { margin: 0 0 4px; font-size: 26px; }
+.drills-hero p { margin: 0; color: var(--text-dim); font-size: 14px; line-height: 1.5; }
+.gold-text {
+  background: var(--gradient-gold);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.drills-global { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.drills-global span { font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+.drills-globalbar {
+  flex: 1;
+  height: 7px;
+  border-radius: 4px;
+  background: var(--bg-panel-2);
+  overflow: hidden;
+}
+.drills-globalbar div {
+  height: 100%;
+  background: var(--gradient-gold);
+  background-size: 200% auto;
+  animation: goldShimmer 3s linear infinite;
+  transition: width 0.5s ease;
+}
+
+/* ----- Cartes de modules ----- */
+.drill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.drill-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 16px 16px 20px;
+  text-align: left;
+  background: var(--bg-panel);
+  border: 1px solid transparent;
+  overflow: hidden;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+.drill-card:hover { transform: translateY(-3px); border-color: rgba(212, 175, 55, 0.55); }
+.drill-card.done { border-color: rgba(129, 182, 76, 0.45); }
+.drill-card-icon { font-size: 28px; }
+.drill-card-title { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 16px; }
+.drill-card-check { color: var(--accent); }
+.drill-card-desc { color: var(--text-dim); font-size: 13px; font-weight: 400; line-height: 1.45; }
+.drill-card-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: auto;
+  padding-top: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.drill-card-count { margin-left: auto; font-variant-numeric: tabular-nums; }
+.drill-level { padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.drill-level--débutant { background: rgba(129, 182, 76, 0.18); color: var(--accent-hover); }
+.drill-level--intermédiaire { background: rgba(232, 163, 61, 0.18); color: var(--warning); }
+.drill-level--avancé { background: rgba(224, 40, 40, 0.16); color: #f07070; }
+.drill-card-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: var(--bg-panel-2);
+}
+.drill-card-bar span {
+  display: block;
+  height: 100%;
+  background: var(--gradient-gold);
+  transition: width 0.4s ease;
+}
+
+/* ----- Le lecteur de défis ----- */
+.drill-layout {
+  display: grid;
+  grid-template-columns: minmax(0, calc(100vh - 220px)) minmax(300px, 380px);
+  grid-template-areas: 'header header' 'board side';
+  gap: 10px 20px;
+  justify-content: center;
+  align-items: start;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.drill-layout--end { grid-template-areas: 'header header' 'finish finish'; }
+@media (max-width: 900px) {
+  .drill-layout { grid-template-columns: 1fr; grid-template-areas: 'header' 'board' 'side'; }
+  .drill-layout--end { grid-template-areas: 'header' 'finish'; }
+}
+
+.drill-header {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--bg-panel);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+.drill-header strong { font-size: 16px; }
+.drill-header-icon { font-size: 20px; }
+.drill-back, .drill-gear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--bg-panel-2);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 17px;
+  line-height: 1;
+}
+.drill-back:hover, .drill-gear:hover { background: var(--bg-hover); }
+.drill-gear { margin-left: auto; font-size: 15px; }
+.drill-count {
+  margin-left: auto;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--bg-panel-2);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold-light);
+  white-space: nowrap;
+}
+
+.drill-board-col { grid-area: board; }
+.drill-side-col { grid-area: side; display: flex; flex-direction: column; gap: 10px; }
+
+.drill-progressbar {
+  height: 8px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  background: var(--bg-panel-2);
+  overflow: hidden;
+}
+.drill-progressbar div {
+  height: 100%;
+  background: var(--gradient-gold);
+  background-size: 200% auto;
+  animation: goldShimmer 3s linear infinite;
+  transition: width 0.45s ease;
+}
+
+/* Plateau d'illustration de l'intro : légèrement voilé, non jouable. */
+.drill-intro-board { position: relative; }
+.drill-intro-veil {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(22, 21, 18, 0.15), rgba(22, 21, 18, 0.55));
+  pointer-events: none;
+}
+
+/* ----- La bulle de Néo ----- */
+.drill-bubble {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--radius);
+  background:
+    radial-gradient(120% 160% at 0% 0%, rgba(212, 175, 55, 0.14), transparent 62%),
+    var(--bg-panel);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  animation: drillBubbleIn 0.3s ease both;
+}
+.drill-bubble--intro { padding: 18px; }
+.drill-bubble--ok {
+  border-color: rgba(129, 182, 76, 0.6);
+  background:
+    radial-gradient(120% 160% at 0% 0%, rgba(129, 182, 76, 0.18), transparent 62%),
+    var(--bg-panel);
+}
+.drill-bubble--ko { animation: drillShake 0.35s ease; }
+.drill-bubble-body { flex: 1; min-width: 0; }
+.drill-bubble-body p { margin: 6px 0 0; font-size: 15px; line-height: 1.5; }
+.drill-replay {
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.drill-turn {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.drill-turn--w { background: #f0f0f0; color: #1c1b18; }
+.drill-turn--b { background: #2b2926; color: #e8e6e3; border: 1px solid var(--border); }
+
+.drill-verdict {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--accent-hover);
+}
+.drill-verdict-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  animation: drillPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.drill-feedback {
+  margin-top: 8px !important;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+.drill-feedback.hint { background: rgba(232, 163, 61, 0.15); border-left: 3px solid var(--warning); }
+.drill-feedback.error { background: rgba(224, 40, 40, 0.13); border-left: 3px solid var(--danger); }
+
+.drill-hint-btn { border: 1px dashed rgba(232, 163, 61, 0.5); }
+.drill-next, .drill-start { font-size: 16px; padding: 12px; }
+.drill-start { animation: goldPulse 2.4s ease-in-out infinite; }
+.drill-intro-meta { margin: 0; text-align: center; font-size: 13px; color: var(--text-dim); }
+
+/* Pastilles de progression */
+.drill-dots { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 2px; }
+.drill-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border);
+}
+.drill-dot.ok { background: var(--accent); border-color: var(--accent); }
+.drill-dot.now { box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.28); }
+
+/* ----- Écran de fin ----- */
+.drill-finish {
+  grid-area: finish;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 480px;
+  margin: 20px auto;
+  padding: 28px 22px;
+  text-align: center;
+  border-radius: var(--radius);
+  background:
+    radial-gradient(120% 120% at 50% 0%, rgba(212, 175, 55, 0.16), transparent 65%),
+    var(--bg-panel);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  animation: drillBubbleIn 0.4s ease both;
+}
+.drill-finish h2 { margin: 6px 0 0; }
+.drill-finish p { margin: 0; color: var(--text-dim); font-size: 14px; line-height: 1.55; }
+.drill-finish-score {
+  font-size: 15px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.drill-finish-score strong {
+  font-size: 40px;
+  background: var(--gradient-gold);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.drill-finish-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+
+@keyframes drillBubbleIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes drillPop {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+@keyframes drillShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .drills-hero, .drill-bubble, .drill-finish { animation: none; }
+  .drill-start, .drill-progressbar div, .drills-globalbar div { animation: none; }
+  .drill-card:hover { transform: none; }
+}

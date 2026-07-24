@@ -22,6 +22,7 @@
 - **Puzzle Rush** (5 min, 3 erreurs) et **puzzle du jour**.
 
 ### 🎓 Apprendre
+- **Défis de Néo** : 6 modules d'entraînement ciblé (52 exercices) — prendre des pièces, prendre sans risque, donner échec, parer un échec, mat en un, la fourchette. Une compétence à la fois, Néo comme instructeur : consigne, flèche de démonstration, indication à la demande, score par module.
 - **9 leçons interactives** avec un coach qui parle : bases, tactiques, finales, ouvertures.
 - **Explorateur d'ouvertures** : base ECO complète (3800+ lignes), noms affichés en direct pendant tes parties.
 

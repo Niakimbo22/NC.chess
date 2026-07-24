@@ -17,6 +17,7 @@ const PRIMARY_NAV = [
 // Onglets secondaires : visibles dans la sidebar desktop, rangés dans la
 // feuille « Plus » sur mobile pour désencombrer la barre du bas.
 const SECONDARY_NAV = [
+  { to: '/drills', label: 'Défis', icon: '🎯' },
   { to: '/lessons', label: 'Leçons', icon: '🎓' },
   { to: '/openings', label: 'Ouvertures', icon: '📖' },
   { to: '/profile', label: 'Profil', icon: '👤' },
