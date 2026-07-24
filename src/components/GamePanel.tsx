@@ -5,6 +5,8 @@ import type { GameResult } from '../game/useChessGame';
 import { END_REASON_FR } from '../game/useChessGame';
 import { pieceUrl } from '../themes/boardThemes';
 import { useSettings } from '../store/settings';
+import NeoAvatar from './NeoAvatar';
+import { neoGameOver } from '../mascot/neo';
 import './gamePanel.css';
 
 export function ClockDisplay({ ms, active, low }: { ms: number; active: boolean; low?: boolean }) {
@@ -175,19 +177,25 @@ export function GameOverModal({
 }) {
   let title: string;
   let emoji: string;
+  let outcome: 'win' | 'loss' | 'draw';
   if (result.winner === null) {
     title = 'Partie nulle';
     emoji = '🤝';
+    outcome = 'draw';
   } else if (playerColor === 'both') {
     title = `${result.winner === 'w' ? whiteName : blackName} gagne !`;
     emoji = '🏆';
+    outcome = 'win';
   } else if (result.winner === playerColor) {
     title = 'Victoire !';
     emoji = '🎉';
+    outcome = 'win';
   } else {
     title = 'Défaite';
     emoji = '😔';
+    outcome = 'loss';
   }
+  const neoLine = useMemo(() => neoGameOver(outcome), [outcome]);
 
   return (
     <div className="gp-modal-backdrop" onClick={onClose}>
@@ -200,6 +208,10 @@ export function GameOverModal({
             {eloChange >= 0 ? '+' : ''}{eloChange} Elo
           </p>
         )}
+        <div className="gp-modal-neo">
+          <NeoAvatar size={40} bob />
+          <p>{neoLine}</p>
+        </div>
         <div className="gp-modal-actions">
           {onRematch && <button className="primary" onClick={onRematch}>Revanche</button>}
           {onAnalyze && <button onClick={onAnalyze}>📊 Analyser la partie</button>}

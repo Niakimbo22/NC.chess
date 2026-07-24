@@ -11,6 +11,7 @@ import {
 import { useFriends, extractFriendCode, pairRoomCode } from '../store/friends';
 import { loadGameHistory, deleteGameFromHistory, type SavedGame } from '../store/gameHistory';
 import { getBot } from '../bots/bots';
+import NeoAvatar from '../components/NeoAvatar';
 import './profile.css';
 
 export default function Profile() {
@@ -26,6 +27,14 @@ export default function Profile() {
     }
     return { w, l, d, total: w + l + d };
   }, [profile.stats]);
+
+  const neoTip = useMemo(() => {
+    if (totals.total === 0) return `Salut ${profile.pseudo} ! Lance une partie contre moi pour te lancer. En selle ! ⚡`;
+    if (totals.total < 10) return `Déjà ${totals.total} partie${totals.total > 1 ? 's' : ''} ! Continue, tu prends le rythme. 🐴`;
+    const rate = totals.w / totals.total;
+    if (rate >= 0.55) return `${Math.round(rate * 100)} % de victoires — tu déroules ! Passe au niveau au-dessus ? 🔥`;
+    return `${totals.total} parties au compteur. Un puzzle par jour et tu vas grimper vite. 📈`;
+  }, [totals, profile.pseudo]);
 
   return (
     <div className="profile">
@@ -68,6 +77,14 @@ export default function Profile() {
 
       {editing && <EditProfileModal onClose={() => setEditing(false)} />}
 
+      <div className="profile-neo">
+        <NeoAvatar size={48} spark bob />
+        <div>
+          <span className="coach-name">Néo</span>
+          <p>{neoTip}</p>
+        </div>
+      </div>
+
       <FriendsSection onChallenge={(code) => navigate(`/play/friend?pair=${code}`)} />
 
       <div className="profile-cols">
@@ -109,7 +126,7 @@ export default function Profile() {
             {games.length === 0 && <p style={{ color: 'var(--text-dim)' }}>Aucune partie enregistrée pour l'instant.</p>}
             {games.slice(0, 50).map((g) => (
               <div key={g.id} className="game-row">
-                <span className="game-mode">{g.mode === 'bot' ? getBot(g.botId ?? '')?.avatar ?? '🤖' : g.mode === 'p2p' ? '👥' : '🪑'}</span>
+                <span className="game-mode">{g.mode === 'neo' ? '♞' : g.mode === 'bot' ? getBot(g.botId ?? '')?.avatar ?? '🤖' : g.mode === 'p2p' ? '👥' : '🪑'}</span>
                 <div className="game-info">
                   <span>{g.white} vs {g.black}</span>
                   <span className="game-meta">

@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Chess, validateFen, type Square } from 'chess.js';
 import Chessboard, { type Arrow } from '../components/board/Chessboard';
 import EvalBar from '../components/EvalBar';
+import NeoAvatar from '../components/NeoAvatar';
 import { Engine, evalToWhiteCp } from '../engine/engine';
 import {
   analyzeGame,
@@ -262,7 +263,7 @@ function ReviewView({ sans, white, black, onBack }: { sans: string[]; white: str
           </button>
         </div>
         <div className="coach-box">
-          <span className="coach-face">🧑‍🏫</span>
+          <NeoAvatar size={40} className="coach-face" />
           <p>{comment}</p>
           {settings.coachVoice && (
             <button title="Écouter" onClick={() => speak(comment)}>🔊</button>

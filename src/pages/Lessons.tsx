@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Chess, type Square } from 'chess.js';
 import Chessboard, { type Arrow, type BoardMove } from '../components/board/Chessboard';
+import NeoAvatar from '../components/NeoAvatar';
 import { LESSONS, type Lesson } from '../data/lessons';
 import { speak, stopSpeaking } from '../coach/voice';
 import { useSettings } from '../store/settings';
@@ -168,8 +169,9 @@ function LessonPlayer({
       </div>
       <div className="lesson-side-col">
         <div className="coach-box lesson-coach">
-          <span className="coach-face">🧑‍🏫</span>
+          <NeoAvatar size={44} bob className="coach-face" />
           <div>
+            <span className="coach-name">Néo</span>
             <p>{step.text}</p>
             {message && <p className={`lesson-msg ${messageKind}`}>{message}</p>}
           </div>

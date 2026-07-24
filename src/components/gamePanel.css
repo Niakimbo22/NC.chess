@@ -102,4 +102,16 @@
 .gp-elo-change { font-weight: 800; font-size: 20px; }
 .gp-elo-change.up { color: var(--accent); }
 .gp-elo-change.down { color: var(--danger); }
+.gp-modal-neo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 4px 14px 14px 14px;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.14), rgba(212, 175, 55, 0.04));
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+.gp-modal-neo p { margin: 0; font-size: 14px; line-height: 1.4; }
 .gp-modal-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }

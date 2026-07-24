@@ -39,7 +39,7 @@ export default function App() {
     <div className="app-layout">
       <nav className="app-sidebar">
         <NavLink to="/" className="app-logo">
-          <img src={`${import.meta.env.BASE_URL}icons/knight-medallion.svg`} alt="" />
+          <img src={`${import.meta.env.BASE_URL}icons/neo.svg`} alt="" />
           <span>NC<em>.chess</em></span>
         </NavLink>
 

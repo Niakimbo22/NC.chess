@@ -74,6 +74,29 @@ function pick(arr: string[]): string {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+/**
+ * Mot de la fin générique de Néo, pour n'importe quelle partie (IA, ami, local).
+ * Neutre sur l'adversaire, contrairement à `neoEnd` du mode « contre Néo ».
+ */
+export function neoGameOver(outcome: 'win' | 'loss' | 'draw'): string {
+  switch (outcome) {
+    case 'win': return pick([
+      'Victoire ! Bien joué, tu progresses. 🏆',
+      'Et voilà le travail ! Propre. ⚡',
+      'GG ! Analyse la partie pour retenir tes bons coups. 📈',
+    ]);
+    case 'loss': return pick([
+      'Pas cette fois — mais c’est en analysant qu’on progresse. 📚',
+      'Défaite instructive ! Regarde où ça a basculé, et on repart. 💪',
+      'Courage ! Chaque partie perdue te rend plus fort. ⚡',
+    ]);
+    case 'draw': return pick([
+      'Match nul, belle bataille ! 🤝',
+      'Égalité — solide. On remet ça ?',
+    ]);
+  }
+}
+
 /** Réplique de Néo pour un état donné. `intro` prend la couleur qui joue. */
 export function neoSay(mood: NeoMood, color?: Color): string {
   if (mood === 'intro') {

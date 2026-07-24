@@ -1,0 +1,65 @@
+.neo-av {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  overflow: visible;
+}
+.neo-av img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: block;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.4);
+}
+.neo-av-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-panel-2);
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.4);
+}
+.neo-av-spark {
+  position: absolute;
+  top: -8%;
+  right: -8%;
+  line-height: 1;
+  filter: drop-shadow(0 0 4px rgba(245, 219, 143, 0.8));
+  animation: sparkPulse 2.2s ease-in-out infinite;
+}
+.neo-av--bob { animation: neoBob 3.5s ease-in-out infinite; }
+
+/* Keyframes redéfinies ici pour que l'avatar s'anime sur TOUTES les pages,
+   même celles qui n'importent pas les CSS spécifiques (profil, analyse…). */
+@keyframes neoBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+@keyframes sparkPulse {
+  0%, 100% { opacity: 0.7; transform: scale(1) rotate(0); }
+  50% { opacity: 1; transform: scale(1.25) rotate(8deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neo-av--bob, .neo-av-spark { animation: none; }
+}
+
+/* Nom « Néo » en libellé doré, partout où il prend la parole. */
+.coach-name {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  background: var(--gradient-gold);
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: goldShimmer 5s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) { .coach-name { animation: none; } }
