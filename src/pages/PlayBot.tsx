@@ -3,7 +3,7 @@ import OpeningLabel from '../components/OpeningLabel';
 import { useNavigate } from 'react-router-dom';
 import type { Color, Square } from 'chess.js';
 import Chessboard, { type Arrow } from '../components/board/Chessboard';
-import { GameOverModal, MoveList, NavButtons, PlayerBar } from '../components/GamePanel';
+import { GameOverModal, MoveList, NavButtons, PlayerBar, ReviewBanner } from '../components/GamePanel';
 import GameSheet from '../components/GameSheet';
 import TimeControlPicker from '../components/TimeControlPicker';
 import { TIME_CONTROLS, type TimeControl } from '../game/timeControls';
@@ -345,6 +345,11 @@ function BotGame({
             <span className="bot-speech-text">{botMessage}</span>
           </div>
         )}
+        <ReviewBanner
+          viewIndex={game.viewIndex}
+          history={game.history}
+          onReturn={() => game.goTo(-1)}
+        />
         <div className="game-board-fit">
           <Chessboard
             fen={game.viewFen}

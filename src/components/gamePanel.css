@@ -75,6 +75,39 @@
 .gp-move:hover { background: var(--bg-hover); }
 .gp-move.current { background: var(--accent-dark); color: #fff; }
 
+/* Bandeau de revue : doit se voir immédiatement, c'est lui qui explique
+   pourquoi l'échiquier ne répond plus. */
+.gp-review-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.22), rgba(212, 175, 55, 0.08));
+  border: 1px solid rgba(212, 175, 55, 0.45);
+}
+.gp-review-label {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold-light);
+  line-height: 1.25;
+}
+.gp-review-label em { font-style: normal; font-weight: 400; font-size: 11.5px; color: var(--text-dim); }
+.gp-review-back {
+  flex: none;
+  padding: 7px 11px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  background: var(--gradient-gold);
+  border: none;
+  color: #1a1408;
+  cursor: pointer;
+}
+
 .gp-nav { display: flex; gap: 4px; }
 .gp-nav button { flex: 1; padding: 8px 4px; font-size: 14px; }
 

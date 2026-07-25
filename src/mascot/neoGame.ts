@@ -138,7 +138,7 @@ export function neoStart(level: NeoLevel, playerColor: Color): string {
     `En selle ! Tu as ${side}, moi le reste. Joue posément, je veille. ⚡`,
     `C’est parti ! Tu prends ${side}. Développe, occupe le centre, et amuse-toi. 🐴`,
     `${level.name} à ton service. Tu joues ${side} — montre-moi ce que tu sais faire !`,
-    `On y va. ${side} à toi. Respire, réfléchis, et surtout : apprends. 🧠`,
+    `On y va : ${side} à toi. Respire, réfléchis, et surtout, apprends. 🧠`,
   ]);
 }
 

@@ -96,5 +96,17 @@
   color: var(--gold-light);
   letter-spacing: 0.5px;
 }
+.voice-note {
+  margin: 4px 0 10px;
+  padding: 9px 11px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-dim);
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 9px;
+}
+.voice-note strong { color: var(--gold-light); }
+
 .about-note { color: var(--text-dim); font-size: 13px; margin: 10px 0 0; }
 .about-note em { font-style: normal; color: var(--gold-light); }

@@ -212,7 +212,13 @@ export function useChessGame(options: UseChessGameOptions): ChessGame {
   }, []);
 
   const goTo = useCallback((index: number) => {
-    setViewIndex(index);
+    // Le dernier demi-coup EST la position courante : on le ramène à -1 (« live »).
+    // Sans ça, revenir en avant jusqu'au bout laissait la partie en mode revue sur
+    // une position identique à la position réelle : l'échiquier restait verrouillé,
+    // « Fin » était désactivé (on est déjà au bout) — plus aucun moyen de reprendre
+    // la main, alors que la pendule continuait de tourner.
+    const live = chessRef.current.history().length;
+    setViewIndex(index >= 0 && index >= live - 1 ? -1 : index);
   }, []);
 
   const reset = useCallback(

@@ -4,6 +4,11 @@ import { useSettings } from '../store/settings';
  * Synthèse vocale du coach. Sélectionne automatiquement la meilleure voix
  * française disponible sur le système : les voix « naturelles / premium »
  * des OS récents sont préférées aux voix robotiques de base.
+ *
+ * Attention : les voix ne viennent PAS de l'application, mais du moteur de
+ * synthèse du téléphone. On ne peut donc que choisir la moins mauvaise, adoucir
+ * la prosodie, et surtout lui donner un texte prononçable — c'est là que se
+ * jouait l'essentiel du « c'est insupportable ».
  */
 
 let cachedVoice: SpeechSynthesisVoice | null = null;
@@ -35,7 +40,7 @@ export function pickFrenchVoice(): SpeechSynthesisVoice | null {
   const preferredName = useSettings.getState().coachVoiceName;
   const voices = speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith('fr'));
   if (voices.length === 0) return null;
-  // Un choix explicite dans les réglages primes toujours.
+  // Un choix explicite dans les réglages prime toujours.
   if (preferredName) {
     const chosen = voices.find((v) => v.name === preferredName);
     if (chosen) return chosen;
@@ -50,18 +55,106 @@ export function pickFrenchVoice(): SpeechSynthesisVoice | null {
 }
 
 /**
+ * La voix retenue est-elle une voix qu'on juge robotique ? Sert à l'expliquer
+ * dans les réglages : sans ça, on rejette « Google français » en interne mais on
+ * la joue quand même faute de mieux, et l'utilisateur ne comprend pas pourquoi.
+ */
+export function voiceIsRobotic(): boolean {
+  if (!('speechSynthesis' in window)) return false;
+  const v = cachedVoice ?? pickFrenchVoice();
+  return v != null && REJECTED_PATTERNS.some((p) => p.test(v.name));
+}
+
+/** Nom de la voix effectivement utilisée (pour l'afficher dans les réglages). */
+export function currentVoiceName(): string | null {
+  if (!('speechSynthesis' in window)) return null;
+  return (cachedVoice ?? pickFrenchVoice())?.name ?? null;
+}
+
+const PIECE_WORD: Record<string, string> = {
+  K: 'roi', Q: 'dame', R: 'tour', B: 'fou', N: 'cavalier',
+};
+const FIGURINE_WORD: Record<string, string> = {
+  '♔': 'roi', '♚': 'roi',
+  '♕': 'dame', '♛': 'dame',
+  '♖': 'tour', '♜': 'tour',
+  '♗': 'fou', '♝': 'fou',
+  '♘': 'cavalier', '♞': 'cavalier',
+  '♙': 'pion', '♟': 'pion',
+};
+// Lettre algébrique de chaque figurine. Le pion n'en a pas : il est traité à part.
+const FIGURINE_SAN: Record<string, string> = {
+  '♔': 'K', '♚': 'K', '♕': 'Q', '♛': 'Q', '♖': 'R',
+  '♜': 'R', '♗': 'B', '♝': 'B', '♘': 'N', '♞': 'N',
+};
+
+// Un coup en notation algébrique complet : pièce, case de départ facultative,
+// prise, case d'arrivée, promotion, échec/mat. La fin est un `(?!\w)` et non un
+// `\b` : après un « + » ou un « # » suivi d'une espace il n'y a pas de frontière
+// de mot, et le suffixe se faisait rejeter — « Dd1+ » perdait son échec, qui
+// repartait ensuite en « plus » à la lecture.
+const SAN_RE = /\b([KQRBN])?([a-h])?([1-8])?(x)?([a-h][1-8])(?:=([QRBN]))?([+#])?(?!\w)/g;
+
+/**
+ * Traduit la notation d'échecs en français parlé. Sans ça la synthèse ânonne
+ * « enn iks eff cinq » pour « Nxf5 », ou « o tiret o » pour un roque : c'est le
+ * genre de charabia qui rend la voix insupportable.
+ */
+export function spokenNotation(text: string): string {
+  let out = text;
+  // Les roques d'abord : « O-O-O » contient « O-O ».
+  out = out.replace(/\bO-O-O\b/g, 'grand roque').replace(/\b0-0-0\b/g, 'grand roque');
+  out = out.replace(/\bO-O\b/g, 'petit roque').replace(/\b0-0\b/g, 'petit roque');
+  // Notation figurine : la pièce reprend sa LETTRE algébrique (« ♖xf5 » → « Rxf5 »)
+  // pour que la passe suivante traite le coup en entier, prise et échec compris.
+  // La remplacer directement par son nom ne suffisait pas : le « f6 » restant
+  // ressemblait alors à une case citée seule, et n'était plus traduit du tout.
+  out = out.replace(/([♔♚♕♛♖♜♗♝♘♞])\s*(?=[a-h1-8x])/g, (_, fig: string) => FIGURINE_SAN[fig]);
+  // Le pion n'a pas de lettre : on le dit en clair.
+  out = out.replace(
+    /[♙♟]\s*(x?)([a-h][1-8])/g,
+    (_, x: string, sq: string) => `pion ${x ? 'prend en' : 'en'} ${sq}`
+  );
+
+  out = out.replace(SAN_RE, (whole, piece, fromFile, fromRank, capture, to, promo, suffix) => {
+    // Rien qui identifie un coup : on ne touche pas au texte (« la case e4 »).
+    if (!piece && !capture && !promo && !suffix && !fromFile && !fromRank) return whole;
+    const parts: string[] = [];
+    if (piece) {
+      parts.push(PIECE_WORD[piece as string]);
+      // Colonne/rangée de départ : une levée d'ambiguïté (« Cbd2 »).
+      if (fromFile || fromRank) parts.push(`de ${(fromFile ?? '') + (fromRank ?? '')}`);
+    } else if (fromFile) {
+      // Prise de pion : « exd5 » se dit « le pion e prend en d5 », pas « de e ».
+      parts.push(`le pion ${fromFile}`);
+    }
+    parts.push(capture ? `prend en ${to}` : `en ${to}`);
+    if (promo) parts.push(`et devient ${PIECE_WORD[promo as string]}`);
+    if (suffix === '+') parts.push('échec');
+    if (suffix === '#') parts.push('échec et mat');
+    return parts.join(' ');
+  });
+
+  // Une prise orpheline (« xf5 », la pièce ayant déjà été nommée).
+  out = out.replace(/\bx([a-h][1-8])\b/g, 'prend en $1');
+  // Figurine isolée, sans coup derrière (une légende, un camp) : son nom suffit.
+  out = out.replace(/[♔♕♖♗♘♙♚♛♜♝♞♟]/g, (fig) => FIGURINE_WORD[fig]);
+  return out;
+}
+
+/**
  * Retire ce qui ne doit pas être prononcé. Sans ça la synthèse lit les emoji
  * à voix haute (« Parfait. Tu vois loin aujourd'hui. yeux »).
  */
 export function speakableText(text: string): string {
   // On retire sans rien mettre à la place : insérer une espace décalerait la
   // ponctuation française (« C'est parti ! » deviendrait « C'est parti! »).
-  return text
+  return spokenNotation(text)
     .replace(/\p{Extended_Pictographic}/gu, '') // emoji
     // Modificateurs : en alternance, pas en classe — un ZWJ ou un sélecteur de
     // variante dans un [...] est ambigu.
     .replace(/[\u{1F3FB}-\u{1F3FF}]|\u{FE0F}|\u{FE0E}|\u{200D}|\u{20E3}/gu, '')
-    .replace(/[♔♕♖♗♘♙♚♛♜♝♞♟]/g, '') // pièces en figurine
+    .replace(/[♔♕♖♗♘♙♚♛♜♝♞♟]/g, '') // figurine résiduelle
     .replace(/[ \t]{2,}/g, ' ')
     .trim();
 }
@@ -69,6 +162,18 @@ export function speakableText(text: string): string {
 export function listFrenchVoices(): SpeechSynthesisVoice[] {
   if (!('speechSynthesis' in window)) return [];
   return speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith('fr'));
+}
+
+/**
+ * Découpe en phrases. Une longue tirade lue d'un seul souffle est ce qui sonne
+ * le plus « robot » : phrase par phrase, le moteur repose son intonation à
+ * chaque fois et respire aux bons endroits.
+ */
+function sentences(text: string): string[] {
+  return text
+    .split(/(?<=[.!?…])\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 export function speak(text: string): void {
@@ -79,14 +184,20 @@ export function speak(text: string): void {
   if (!spoken) return; // message purement emoji : rien à dire
   speechSynthesis.cancel();
   if (!cachedVoice) cachedVoice = pickFrenchVoice();
-  const utterance = new SpeechSynthesisUtterance(spoken);
-  if (cachedVoice) utterance.voice = cachedVoice;
-  utterance.lang = 'fr-FR';
-  // Un peu plus lent et légèrement plus grave : moins « lecture de robot ».
-  utterance.rate = 0.96;
-  utterance.pitch = 0.95;
-  utterance.volume = volume;
-  speechSynthesis.speak(utterance);
+
+  const chunks = sentences(spoken);
+  chunks.forEach((chunk, i) => {
+    const utterance = new SpeechSynthesisUtterance(chunk);
+    if (cachedVoice) utterance.voice = cachedVoice;
+    utterance.lang = 'fr-FR';
+    // Un peu plus lent et légèrement plus grave : moins « lecture de robot ».
+    // La variation d'une phrase à l'autre casse la monotonie du débit constant.
+    const wave = Math.sin(i * 1.7);
+    utterance.rate = 0.94 + wave * 0.04;
+    utterance.pitch = 0.95 + wave * 0.06;
+    utterance.volume = volume;
+    speechSynthesis.speak(utterance);
+  });
 }
 
 export function stopSpeaking(): void {

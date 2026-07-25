@@ -3,7 +3,7 @@ import OpeningLabel from '../components/OpeningLabel';
 import { useNavigate } from 'react-router-dom';
 import type { Color } from 'chess.js';
 import Chessboard from '../components/board/Chessboard';
-import { GameOverModal, MoveList, NavButtons, PlayerBar } from '../components/GamePanel';
+import { GameOverModal, MoveList, NavButtons, PlayerBar, ReviewBanner } from '../components/GamePanel';
 import TimeControlPicker from '../components/TimeControlPicker';
 import { TIME_CONTROLS, type TimeControl } from '../game/timeControls';
 import { useChessGame } from '../game/useChessGame';
@@ -90,6 +90,11 @@ function LocalGame({
           history={game.history}
           clockMs={game.clock?.[topColor]}
           clockActive={game.clockRunning && game.turn === topColor && !game.result}
+        />
+        <ReviewBanner
+          viewIndex={game.viewIndex}
+          history={game.history}
+          onReturn={() => game.goTo(-1)}
         />
         <Chessboard
           fen={game.viewFen}

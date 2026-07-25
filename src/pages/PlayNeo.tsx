@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Chess, type Color, type Square } from 'chess.js';
 import Chessboard, { type Arrow, type BoardMove } from '../components/board/Chessboard';
-import { GameOverModal, MoveList, NavButtons, PlayerBar } from '../components/GamePanel';
+import { GameOverModal, MoveList, NavButtons, PlayerBar, ReviewBanner } from '../components/GamePanel';
 import TimeControlPicker from '../components/TimeControlPicker';
 import OpeningLabel from '../components/OpeningLabel';
 import { TIME_CONTROLS, type TimeControl } from '../game/timeControls';
@@ -20,7 +20,8 @@ import { NEO } from '../mascot/neo';
 import { useProfile } from '../store/profile';
 import { saveGameToHistory } from '../store/gameHistory';
 import { playSound } from '../audio/sounds';
-import { speak } from '../coach/voice';
+import { speak, stopSpeaking } from '../coach/voice';
+import { useSettings } from '../store/settings';
 import './playNeo.css';
 
 interface NeoConfig {
@@ -192,6 +193,7 @@ interface Warning { text: string; cls: 'mistake' | 'blunder'; }
 function NeoGame({ config, onExit, onRematch }: { config: NeoConfig; onExit: () => void; onRematch: () => void; }) {
   const navigate = useNavigate();
   const profile = useProfile();
+  const settings = useSettings();
   const { level, playerColor, tc } = config;
   const botColor: Color = playerColor === 'w' ? 'b' : 'w';
 
@@ -444,6 +446,11 @@ function NeoGame({ config, onExit, onRematch }: { config: NeoConfig; onExit: () 
           clockActive={game.clockRunning && game.turn === botColor && !game.result}
           subtitle={subtitle}
         />
+        <ReviewBanner
+          viewIndex={game.viewIndex}
+          history={game.history}
+          onReturn={() => game.goTo(-1)}
+        />
         <div className="game-board-fit">
           <Chessboard
             fen={game.viewFen}
@@ -475,7 +482,25 @@ function NeoGame({ config, onExit, onRematch }: { config: NeoConfig; onExit: () 
             {(botThinking || coachBusy || adviceLoading) && <span className="neo-coach-dots"><i /><i /><i /></span>}
           </div>
           <div className="neo-coach-body">
-            <span className="neo-coach-name">Néo <span className="neo-coach-lvl">· {level.name}</span></span>
+            {/* Le bouton est hors du nom : « .neo-coach-name » peint son texte en
+                dégradé doré clippé (color: transparent), l'emoji y serait invisible. */}
+            <div className="neo-coach-head">
+              <span className="neo-coach-name">Néo <span className="neo-coach-lvl">· {level.name}</span></span>
+              {/* Couper la voix sans quitter la partie : le réglage était enterré
+                  dans une autre page, alors que c'est en pleine partie qu'une voix
+                  agaçante devient insupportable. */}
+              <button
+                className="neo-voice-toggle"
+                onClick={() => {
+                  stopSpeaking();
+                  settings.set({ coachVoice: !settings.coachVoice });
+                }}
+                title={settings.coachVoice ? 'Couper la voix de Néo' : 'Réactiver la voix de Néo'}
+                aria-label={settings.coachVoice ? 'Couper la voix de Néo' : 'Réactiver la voix de Néo'}
+              >
+                {settings.coachVoice ? '🔊' : '🔇'}
+              </button>
+            </div>
             {coach.text
               ? <p className="neo-coach-text" key={coach.text}>{coach.text}</p>
               : <p className="neo-coach-text neo-coach-idle">Je t’observe… demande-moi un conseil quand tu veux. ⚡</p>}

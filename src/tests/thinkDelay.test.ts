@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BOTS, botThinkDelay } from '../bots/bots';
-import { speakableText } from '../coach/voice';
+import { speakableText, spokenNotation } from '../coach/voice';
 
 // Un bot qui répond en 300 ms sur toute la partie casse l'illusion : on vérifie
 // donc le rythme, pas seulement que la fonction renvoie un nombre.
@@ -61,11 +61,47 @@ describe('texte lu à voix haute', () => {
     expect(speakableText('Bien joué 👏🎉 continue')).toBe('Bien joué continue');
   });
 
-  it('retire les pièces en figurine', () => {
-    expect(speakableText('♖xf5 est correct')).toBe('xf5 est correct');
-  });
-
   it('ne renvoie rien pour un message purement emoji', () => {
     expect(speakableText('🎉🎉')).toBe('');
+  });
+});
+
+describe('notation d’échecs prononçable', () => {
+  it('nomme la pièce en figurine au lieu de l’escamoter', () => {
+    expect(speakableText('♖xf5 est correct')).toBe('tour prend en f5 est correct');
+    expect(speakableText('♞f6 tient le centre')).toBe('cavalier en f6 tient le centre');
+  });
+
+  it('traduit la notation algébrique', () => {
+    expect(spokenNotation('Regarde plutôt du côté de Nxf5.')).toBe(
+      'Regarde plutôt du côté de cavalier prend en f5.'
+    );
+    expect(spokenNotation('Joue Bc4')).toBe('Joue fou en c4');
+    expect(spokenNotation('Qd1+')).toBe('dame en d1 échec');
+    expect(spokenNotation('Qh7#')).toBe('dame en h7 échec et mat');
+    expect(spokenNotation('exd5')).toBe('le pion e prend en d5');
+    expect(spokenNotation('Nbd2')).toBe('cavalier de b en d2');
+    expect(spokenNotation('e8=Q')).toBe('en e8 et devient dame');
+  });
+
+  it('dit les roques', () => {
+    expect(spokenNotation('Pense à O-O')).toBe('Pense à petit roque');
+    expect(spokenNotation('O-O-O est jouable')).toBe('grand roque est jouable');
+  });
+
+  it('laisse le français intact', () => {
+    const phrases = [
+      'Rien d’urgent : renforce ta position, double une tour sur une colonne ouverte.',
+      'Attends ! Ce coup laisse ta dame en prise.',
+      'Bien vu, on reprend. Prends ton temps.',
+      'Échec ! À toi de parer.',
+    ];
+    for (const p of phrases) expect(spokenNotation(p)).toBe(p);
+  });
+
+  it('ne touche pas à une case citée seule', () => {
+    expect(spokenNotation('Le pion arrive en e4 rapidement')).toBe(
+      'Le pion arrive en e4 rapidement'
+    );
   });
 });

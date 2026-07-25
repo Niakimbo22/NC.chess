@@ -8,6 +8,41 @@ et le versionnage suit [SemVer](https://semver.org/lang/fr/) :
 La version affichée dans l'app (sidebar + Réglages → À propos) provient de
 `package.json`.
 
+## [0.2.3] — 2026-07-25
+
+### Corrigé
+- **La partie se bloquait après un retour en arrière.** En revenant en avant
+  jusqu’au dernier coup, la partie restait en mode « revue » sur une position
+  pourtant identique à la position réelle : l’échiquier ne répondait plus, les
+  boutons « Suivant » et « Fin » étaient désactivés (on était déjà au bout) — plus
+  aucun moyen de reprendre la main, pendant que la pendule continuait de tourner.
+  Le dernier demi-coup est désormais reconnu comme la position courante. Idem en
+  touchant le dernier coup dans la liste. Corrigé pour les quatre modes de jeu.
+- **Néo prononçait la notation d’échecs telle quelle** : « Regarde plutôt du côté
+  de Nxf5 » sortait en « enn iks eff cinq », et dans les Défis « ♖xf5 est
+  correct » devenait « iks eff cinq est correct ». La notation est traduite avant
+  lecture : « cavalier prend en f5 », « dame en d1 échec », « petit roque »,
+  « le pion e prend en d5 », « en e8 et devient dame ». Les cases citées seules
+  (« arrive en e4 ») et le français courant ne sont pas touchés.
+
+### Ajouté
+- **Bandeau de revue** au-dessus de l’échiquier dès qu’on regarde un coup passé :
+  il indique lequel (« Revue — 4…exd4 »), de combien de coups on est en retard, et
+  porte un bouton **« Revenir à la partie »**. Sans lui, la navigation verrouillait
+  l’échiquier sans rien dire — et sur mobile la liste des coups vit dans un tiroir,
+  donc une fois celui-ci refermé plus rien n’expliquait le blocage.
+- **Couper la voix de Néo en un geste**, depuis sa boîte de dialogue en pleine
+  partie : le réglage était enterré dans une autre page.
+- **Réglages → Coach** : quand la seule voix française du téléphone est une voix
+  au timbre plat, l’app le dit et explique comment en installer une autre. Les voix
+  viennent du système, pas de NC.chess : autant être clair plutôt que de rejeter
+  cette voix en interne tout en la jouant quand même faute de mieux.
+
+### Changé
+- Lecture **phrase par phrase**, avec une légère variation de débit et de hauteur
+  d’une phrase à l’autre : une longue tirade lue d’un seul souffle est ce qui sonne
+  le plus « robot ».
+
 ## [0.2.2] — 2026-07-25
 
 ### Changé

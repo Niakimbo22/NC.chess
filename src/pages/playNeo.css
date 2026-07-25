@@ -209,6 +209,20 @@
   animation: goldShimmer 5s linear infinite;
 }
 .neo-coach-lvl { font-weight: 600; }
+.neo-coach-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.neo-voice-toggle {
+  flex: none;
+  /* Cible tactile : 22 px de haut se ratait au pouce. */
+  min-width: 40px;
+  min-height: 34px;
+  padding: 0 9px;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  cursor: pointer;
+}
 .neo-coach-text {
   margin: 3px 0 0;
   font-size: 14px;

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSettings } from '../store/settings';
 import { BOARD_THEMES, PIECE_SETS, SOUND_PACKS, pieceUrl } from '../themes/boardThemes';
 import { playSound } from '../audio/sounds';
-import { listFrenchVoices, resetVoiceCache, speak } from '../coach/voice';
+import { currentVoiceName, listFrenchVoices, resetVoiceCache, speak, voiceIsRobotic } from '../coach/voice';
 import { APP_VERSION } from '../version';
 import './settings.css';
 
@@ -132,10 +132,14 @@ export default function Settings() {
 function VoicePicker() {
   const s = useSettings();
   const [voices, setVoices] = useState(listFrenchVoices());
+  const [robotic, setRobotic] = useState(false);
 
   useEffect(() => {
     // Les voix arrivent parfois après le chargement de la page
-    const refresh = () => setVoices(listFrenchVoices());
+    const refresh = () => {
+      setVoices(listFrenchVoices());
+      setRobotic(voiceIsRobotic());
+    };
     refresh();
     if ('speechSynthesis' in window) {
       speechSynthesis.addEventListener('voiceschanged', refresh);
@@ -148,6 +152,20 @@ function VoicePicker() {
   }
 
   return (
+    <>
+    {/* Les voix ne viennent pas de l'app mais du moteur de synthèse du téléphone :
+        on ne peut pas en fabriquer une meilleure, seulement le dire clairement et
+        proposer celles qui sont installées. */}
+    {robotic && (
+      <p className="voice-note">
+        ⚠️ La voix française utilisée est <strong>{currentVoiceName()}</strong> — une
+        voix de synthèse au timbre très plat. NC.chess ne peut pas la remplacer : les
+        voix viennent du système, pas de l’app. Deux solutions : installer un autre
+        moteur de synthèse (Réglages Android → Gestion générale → Synthèse vocale),
+        puis revenir choisir la nouvelle voix ici — ou couper la voix, Néo écrit tout
+        de toute façon.
+      </p>
+    )}
     <div className="slider-row" style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
       <span>Voix :</span>
       <select
@@ -156,6 +174,7 @@ function VoicePicker() {
         onChange={(e) => {
           s.set({ coachVoiceName: e.target.value || null });
           resetVoiceCache();
+          setRobotic(voiceIsRobotic()); // l'avertissement doit suivre le choix
           setTimeout(() => speak('Bonjour ! Je suis ton coach d’échecs.'), 100);
         }}
       >
@@ -166,6 +185,7 @@ function VoicePicker() {
       </select>
       <button onClick={() => speak('Bonjour ! Je suis ton coach d’échecs. En avant pour la victoire !')}>▶ Tester</button>
     </div>
+    </>
   );
 }
 

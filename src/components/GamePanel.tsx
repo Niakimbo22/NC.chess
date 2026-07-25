@@ -132,6 +132,40 @@ export function MoveList({
   );
 }
 
+/**
+ * Bandeau « tu regardes un coup passé ». Sans lui, naviguer dans l'historique
+ * verrouille l'échiquier sans rien dire : sur mobile la liste des coups vit dans
+ * le tiroir, donc une fois celui-ci refermé plus rien n'indique pourquoi on ne
+ * peut plus jouer, ni comment revenir. Le bouton est le retour de secours.
+ */
+export function ReviewBanner({
+  viewIndex,
+  history,
+  onReturn,
+}: {
+  viewIndex: number;
+  history: Move[];
+  onReturn: () => void;
+}) {
+  if (viewIndex === -1) return null;
+  const ply = viewIndex === -2 ? 0 : viewIndex + 1;
+  const behind = history.length - ply;
+  // Le coup regardé, en notation habituelle : « 4.d4 » pour les blancs,
+  // « 4…exd4 » pour les noirs. Bien plus parlant qu'un numéro de demi-coup.
+  const label = ply === 0
+    ? 'position de départ'
+    : `${Math.ceil(ply / 2)}${ply % 2 ? '.' : '…'}${history[ply - 1].san}`;
+  return (
+    <div className="gp-review-banner">
+      <span className="gp-review-label">
+        👁 Revue — {label}
+        <em>{behind} coup{behind > 1 ? 's' : ''} plus loin dans la partie</em>
+      </span>
+      <button className="gp-review-back" onClick={onReturn}>Revenir à la partie ⏭</button>
+    </div>
+  );
+}
+
 export function NavButtons({
   historyLength,
   viewIndex,
