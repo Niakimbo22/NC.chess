@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { Chess } from 'chess.js';
+import { castlingAliases } from '../game/castling';
 import { eloDelta } from '../store/profile';
 import { formatClock, customTimeControl } from '../game/timeControls';
 import { generateRoomCode, normalizeRoomCode } from '../p2p/session';
@@ -92,5 +94,51 @@ describe('puzzles', () => {
     const excluded = new Set(pool.map((p) => p.id).slice(0, 99));
     const last = pickPuzzle(pool, { rating: 400, spread: 10000, exclude: excluded })!;
     expect(last.id).toBe('p99');
+  });
+});
+
+describe('gestes de roque', () => {
+  const kingside = () => {
+    const c = new Chess();
+    for (const m of ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'Bc5']) c.move(m);
+    return c;
+  };
+  const queenside = () => {
+    const c = new Chess();
+    for (const m of ['d4', 'd5', 'Nc3', 'Nc6', 'Bf4', 'Bf5', 'Qd2', 'Qd7']) c.move(m);
+    return c;
+  };
+
+  it('accepte le roi posé sur sa tour (petit roque)', () => {
+    const alias = castlingAliases(kingside(), 'e1');
+    expect(alias.get('h1')).toBe('g1');
+  });
+
+  it('accepte la tour et la colonne b pour le grand roque', () => {
+    const alias = castlingAliases(queenside(), 'e1');
+    expect(alias.get('a1')).toBe('c1');
+    expect(alias.get('b1')).toBe('c1');
+  });
+
+  it('laisse d1 tranquille : Rd1 reste un vrai coup de roi', () => {
+    expect(castlingAliases(queenside(), 'e1').has('d1')).toBe(false);
+  });
+
+  it('ne propose rien quand le roque est impossible', () => {
+    const c = kingside();
+    c.move('Ke2'); // le roi a bougé : plus de roque
+    c.move('Nf6');
+    expect(castlingAliases(c, 'e2').size).toBe(0);
+  });
+
+  it('marche aussi pour les noirs', () => {
+    const c = new Chess();
+    for (const m of ['e4', 'e5', 'Nf3', 'Nf6', 'Bc4', 'Bc5', 'O-O']) c.move(m);
+    const alias = castlingAliases(c, 'e8');
+    expect(alias.get('h8')).toBe('g8');
+  });
+
+  it('ignore les pièces qui ne sont pas le roi', () => {
+    expect(castlingAliases(kingside(), 'h1').size).toBe(0);
   });
 });

@@ -1,4 +1,4 @@
-import { useSettings } from '../store/settings';
+import { useSettings, type VoiceScope } from '../store/settings';
 
 /**
  * Synthèse vocale du coach. Sélectionne automatiquement la meilleure voix
@@ -176,31 +176,70 @@ function sentences(text: string): string[] {
     .filter(Boolean);
 }
 
-export function speak(text: string): void {
+export interface SpeakOptions {
+  /**
+   * Réplique essentielle : avertissement avant une gaffe, conseil demandé,
+   * fin de partie, consigne d'une leçon. Le reste (félicitations, petites
+   * phrases d'ambiance) n'est lu que si tu as demandé « tout ».
+   */
+  important?: boolean;
+  /** Ignore le réglage « quand Néo parle » (bouton ▶ Tester, bouton 🔊). */
+  force?: boolean;
+}
+
+let startTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Faut-il lire ce message à voix haute ? Trop parler est la première cause
+ * d'exaspération : par défaut Néo ne dit que ce qui compte (avertissement,
+ * conseil demandé, fin de partie) et écrit tout le reste, comme avant.
+ */
+export function shouldSpeak(
+  settings: { coachVoice: boolean; coachVoiceScope: VoiceScope },
+  options: SpeakOptions = {}
+): boolean {
+  if (!settings.coachVoice) return false; // voix coupée : rien ne passe, jamais
+  if (options.force || options.important) return true;
+  return settings.coachVoiceScope === 'all';
+}
+
+export function speak(text: string, options: SpeakOptions = {}): void {
   if (!('speechSynthesis' in window)) return;
-  const { coachVoice, volume } = useSettings.getState();
-  if (!coachVoice) return;
+  const state = useSettings.getState();
+  const { coachVoiceRate, coachVoicePitch, volume } = state;
+  if (!shouldSpeak(state, options)) return;
   const spoken = speakableText(text);
   if (!spoken) return; // message purement emoji : rien à dire
-  speechSynthesis.cancel();
+
+  stopSpeaking();
   if (!cachedVoice) cachedVoice = pickFrenchVoice();
 
   const chunks = sentences(spoken);
-  chunks.forEach((chunk, i) => {
-    const utterance = new SpeechSynthesisUtterance(chunk);
-    if (cachedVoice) utterance.voice = cachedVoice;
-    utterance.lang = 'fr-FR';
-    // Un peu plus lent et légèrement plus grave : moins « lecture de robot ».
-    // La variation d'une phrase à l'autre casse la monotonie du débit constant.
-    const wave = Math.sin(i * 1.7);
-    utterance.rate = 0.94 + wave * 0.04;
-    utterance.pitch = 0.95 + wave * 0.06;
-    utterance.volume = volume;
-    speechSynthesis.speak(utterance);
-  });
+  // Chrome (Android surtout) ignore silencieusement un `speak()` lancé dans la
+  // foulée d'un `cancel()` : la première phrase se perd, ou tout reste muet.
+  // Un court répit remet le moteur d'aplomb.
+  startTimer = setTimeout(() => {
+    startTimer = null;
+    for (const chunk of chunks) {
+      const utterance = new SpeechSynthesisUtterance(chunk);
+      if (cachedVoice) utterance.voice = cachedVoice;
+      utterance.lang = 'fr-FR';
+      // Débit et hauteur réglables : les moteurs de synthèse français sont
+      // très inégaux, et ce qui sonne juste sur un téléphone crie sur l'autre.
+      // Aucune modulation aléatoire ici — elle sonnait « ivre » plus qu'humaine.
+      utterance.rate = coachVoiceRate;
+      utterance.pitch = coachVoicePitch;
+      utterance.volume = volume;
+      speechSynthesis.speak(utterance);
+    }
+  }, 90);
 }
 
 export function stopSpeaking(): void {
+  if (startTimer) {
+    clearTimeout(startTimer);
+    startTimer = null;
+  }
   if ('speechSynthesis' in window) speechSynthesis.cancel();
 }
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BOTS, botThinkDelay } from '../bots/bots';
-import { speakableText, spokenNotation } from '../coach/voice';
+import { shouldSpeak, speakableText, spokenNotation } from '../coach/voice';
 
 // Un bot qui répond en 300 ms sur toute la partie casse l'illusion : on vérifie
 // donc le rythme, pas seulement que la fonction renvoie un nombre.
@@ -103,5 +103,27 @@ describe('notation d’échecs prononçable', () => {
     expect(spokenNotation('Le pion arrive en e4 rapidement')).toBe(
       'Le pion arrive en e4 rapidement'
     );
+  });
+});
+
+describe('quand Néo parle', () => {
+  const off = { coachVoice: false, coachVoiceScope: 'key' as const };
+  const key = { coachVoice: true, coachVoiceScope: 'key' as const };
+  const all = { coachVoice: true, coachVoiceScope: 'all' as const };
+
+  it('voix coupée : rien ne passe, même forcé', () => {
+    expect(shouldSpeak(off)).toBe(false);
+    expect(shouldSpeak(off, { important: true })).toBe(false);
+    expect(shouldSpeak(off, { force: true })).toBe(false);
+  });
+
+  it('« quand ça compte » : l’essentiel et les boutons 🔊 seulement', () => {
+    expect(shouldSpeak(key)).toBe(false);
+    expect(shouldSpeak(key, { important: true })).toBe(true);
+    expect(shouldSpeak(key, { force: true })).toBe(true);
+  });
+
+  it('« tout lire » : le bavardage passe aussi', () => {
+    expect(shouldSpeak(all)).toBe(true);
   });
 });

@@ -136,7 +136,9 @@ export function useChessGame(options: UseChessGameOptions): ChessGame {
       const chess = chessRef.current;
       setFen(chess.fen());
       setHistory([...chess.history({ verbose: true })]);
-      setViewIndex(-1);
+      // On NE ramène PAS au direct : si tu es en train de revoir le coup de
+      // l'adversaire, un coup joué pendant ce temps ne doit pas te téléporter.
+      // La barre de relecture et le bandeau disent où tu es, « ⏭ » ramène.
       if (!muted) playMoveSound(move.flags, chess.inCheck(), chess.isCheckmate());
       // Incrément + démarrage pendule après le premier coup des noirs
       setClock((c) => {

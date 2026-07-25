@@ -29,8 +29,10 @@
 ### 🎨 Personnalisation totale
 - 10 thèmes d'échiquier, 5 jeux de pièces, 4 packs de sons, volume, animations.
 - Pré-coups, auto-promotion, confirmation de coup, coordonnées, flèches et surlignages au clic droit.
+- **Barre de relecture** sous l'échiquier (⏮ ◀ ▶ ⏭, flèches du clavier) : revoir le coup de l'adversaire sans rien changer à la partie.
+- Roque au geste naturel : le roi se pose sur sa tour, ou sur sa case habituelle.
 - Profil local : pseudo, 20 avatars, Elo avec graphe de progression, stats par cadence, historique des parties.
-- Choix de la voix du coach parmi les voix françaises du système.
+- Voix de Néo **coupée par défaut** : elle s'active en un geste, et se règle (voix du système, débit, hauteur, et quand Néo parle).
 
 ### 📱 Partout
 - **PWA installable**, fonctionne **hors ligne** (sauf multijoueur), interface responsive mobile.

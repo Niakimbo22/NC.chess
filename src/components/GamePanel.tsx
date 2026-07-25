@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Color, Move } from 'chess.js';
 import { formatClock } from '../game/timeControls';
 import type { GameResult } from '../game/useChessGame';
@@ -166,24 +166,75 @@ export function ReviewBanner({
   );
 }
 
-export function NavButtons({
-  historyLength,
+/**
+ * Barre de relecture, collée sous l'échiquier — les deux flèches de chess.com.
+ *
+ * Elle est volontairement HORS du tiroir « Coups & options » : revoir le coup
+ * de l'adversaire est un geste qu'on fait en pleine partie, une fois par coup ;
+ * il ne doit pas coûter deux tapotements et la fermeture d'un panneau. Rien
+ * n'est modifié dans la partie : la pendule tourne, l'adversaire joue, on ne
+ * fait que déplacer la fenêtre d'affichage — et « ⏭ » ramène au direct.
+ */
+export function MoveNav({
+  history,
   viewIndex,
   onGoTo,
 }: {
-  historyLength: number;
+  history: Move[];
   viewIndex: number;
   onGoTo: (index: number) => void;
 }) {
-  // pointeur : -1 = position initiale, 0..n-1 = après le coup i
-  const pointer = viewIndex === -2 ? -1 : viewIndex === -1 ? historyLength - 1 : viewIndex;
-  const atEnd = pointer >= historyLength - 1;
+  // pointeur : -1 = position initiale, 0..n-1 = après le demi-coup i
+  const pointer = viewIndex === -2 ? -1 : viewIndex === -1 ? history.length - 1 : viewIndex;
+  const atStart = pointer < 0;
+  const atEnd = pointer >= history.length - 1;
+  const live = viewIndex === -1;
+
+  const prev = useCallback(() => { if (!atStart) onGoTo(pointer <= 0 ? -2 : pointer - 1); }, [atStart, pointer, onGoTo]);
+  const next = useCallback(() => { if (!atEnd) onGoTo(pointer + 1); }, [atEnd, pointer, onGoTo]);
+
+  // Au clavier aussi : ← → pour parcourir, Début/Fin pour les extrémités.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+      if (e.key === 'ArrowLeft') prev();
+      else if (e.key === 'ArrowRight') next();
+      else if (e.key === 'Home') onGoTo(-2);
+      else if (e.key === 'End') onGoTo(-1);
+      else return;
+      e.preventDefault();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [prev, next, onGoTo]);
+
+  // Étiquette centrale : le coup regardé en notation habituelle.
+  let label: string;
+  if (history.length === 0) label = 'Aucun coup';
+  else if (live) label = 'En direct';
+  else if (pointer < 0) label = 'Position de départ';
+  else {
+    const ply = pointer + 1;
+    label = `${Math.ceil(ply / 2)}${ply % 2 ? '.' : '…'} ${history[ply - 1].san}`;
+  }
+
   return (
-    <div className="gp-nav">
-      <button onClick={() => onGoTo(-2)} disabled={pointer < 0} title="Début">⏮</button>
-      <button onClick={() => onGoTo(pointer <= 0 ? -2 : pointer - 1)} disabled={pointer < 0} title="Précédent">◀</button>
-      <button onClick={() => onGoTo(pointer + 1)} disabled={atEnd} title="Suivant">▶</button>
-      <button onClick={() => onGoTo(-1)} disabled={atEnd} title="Fin">⏭</button>
+    <div className={`gp-boardnav ${live ? '' : 'reviewing'}`}>
+      <button onClick={() => onGoTo(-2)} disabled={atStart} title="Début de la partie" aria-label="Début de la partie">⏮</button>
+      <button onClick={prev} disabled={atStart} title="Coup précédent" aria-label="Coup précédent">◀</button>
+      <span className="gp-boardnav-label">{label}</span>
+      <button onClick={next} disabled={atEnd} title="Coup suivant" aria-label="Coup suivant">▶</button>
+      <button
+        className={live ? '' : 'accent'}
+        onClick={() => onGoTo(-1)}
+        disabled={atEnd}
+        title="Revenir au direct"
+        aria-label="Revenir au direct"
+      >
+        ⏭
+      </button>
     </div>
   );
 }

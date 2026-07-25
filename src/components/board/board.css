@@ -40,6 +40,11 @@
   border-radius: 50%;
 }
 
+/* Tour « roquable » : anneau doré, pour ne pas le confondre avec une prise. */
+.nc-castle-hint {
+  border-color: rgba(212, 175, 55, 0.75);
+}
+
 .nc-coord {
   position: absolute;
   font-size: clamp(8px, 1.3vw, 12px);

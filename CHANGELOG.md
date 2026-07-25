@@ -8,6 +8,47 @@ et le versionnage suit [SemVer](https://semver.org/lang/fr/) :
 La version affichée dans l'app (sidebar + Réglages → À propos) provient de
 `package.json`.
 
+## [0.2.4] — 2026-07-25
+
+### Corrigé
+- **Le roque ne marchait pas.** Poser le roi sur sa tour — le geste de
+  l’échiquier réel, celui qu’accepte chess.com — ne faisait que sélectionner la
+  tour : le roque paraissait tout bonnement cassé. Le roi accepte désormais
+  `h1`/`h8` (petit roque) et `a1`/`a8`, `b1`/`b8` (grand roque) en plus de sa case
+  officielle `g`/`c`, au clic comme au glisser. Un **anneau doré sur la tour**
+  annonce le geste quand le roi est sélectionné. `d1`/`d8` reste un vrai coup de
+  roi (Rd1), il n’est pas détourné.
+- **Un coup joué pendant qu’on regarde en arrière ne ramène plus au direct.** La
+  réponse de l’adversaire téléportait à la position courante, en plein milieu de
+  la relecture.
+
+### Ajouté
+- **Barre de relecture sous l’échiquier**, dans les quatre modes de jeu : `⏮ ◀`
+  le coup regardé `▶ ⏭`. Revoir le coup de l’adversaire redevient un geste d’une
+  seconde, sans ouvrir le tiroir « Coups & options » et sans rien changer à la
+  partie — la pendule tourne, l’adversaire joue, seul l’affichage recule. La
+  barre se teinte d’or en revue et `⏭` ramène au direct. Au clavier :
+  **← →**, **Début**, **Fin**.
+- **Réglages → Voix de Néo** : choix de **quand** Néo parle (« seulement quand ça
+  compte » ou « tout lire à voix haute »), curseurs de **débit** et de **hauteur**,
+  boutons **Écouter / Stop**. Les réglages restent accessibles même sans voix
+  française installée.
+
+### Changé
+- **La voix de Néo est coupée par défaut**, y compris pour ceux qui l’avaient
+  déjà subie (les réglages existants sont migrés). Elle ne vient pas de NC.chess
+  mais du moteur de synthèse de l’appareil : l’imposer d’office était le meilleur
+  moyen de rendre l’app pénible. Elle se rallume en un geste — Réglages ou bouton
+  🔊 en pleine partie — et dit alors un mot de confirmation (ce qui, au passage,
+  déverrouille la synthèse sur iOS).
+- **Néo se tait sauf quand ça compte** : par défaut, seuls l’avertissement avant
+  une gaffe, le conseil demandé et la fin de partie sont lus. Leçons, défis et
+  petites phrases d’ambiance restent écrits — et les boutons 🔊 les lisent à la
+  demande.
+- **Plus de variation aléatoire de débit et de hauteur** entre les phrases : elle
+  sonnait « ivre » plutôt qu’humaine. Le débit et la hauteur sont désormais
+  constants et réglables.
+
 ## [0.2.3] — 2026-07-25
 
 ### Corrigé

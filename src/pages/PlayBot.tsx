@@ -3,7 +3,7 @@ import OpeningLabel from '../components/OpeningLabel';
 import { useNavigate } from 'react-router-dom';
 import type { Color, Square } from 'chess.js';
 import Chessboard, { type Arrow } from '../components/board/Chessboard';
-import { GameOverModal, MoveList, NavButtons, PlayerBar, ReviewBanner } from '../components/GamePanel';
+import { GameOverModal, MoveList, MoveNav, PlayerBar, ReviewBanner } from '../components/GamePanel';
 import GameSheet from '../components/GameSheet';
 import TimeControlPicker from '../components/TimeControlPicker';
 import { TIME_CONTROLS, type TimeControl } from '../game/timeControls';
@@ -369,6 +369,7 @@ function BotGame({
           clockMs={game.clock?.[playerColor]}
           clockActive={game.clockRunning && game.turn === playerColor && !game.result}
         />
+        <MoveNav history={game.history} viewIndex={game.viewIndex} onGoTo={game.goTo} />
       </div>
       <div className="game-side-col">
         {!engineReady && <div className="bot-message">Chargement du moteur… ⏳</div>}
@@ -380,7 +381,6 @@ function BotGame({
         <GameSheet label={game.result ? 'Partie terminée' : 'Coups & options'}>
           <OpeningLabel history={game.history} />
           <MoveList history={game.history} viewIndex={game.viewIndex} onSelect={game.goTo} />
-          <NavButtons historyLength={game.history.length} viewIndex={game.viewIndex} onGoTo={game.goTo} />
           <div className="game-actions">
             {!game.result ? (
               <>

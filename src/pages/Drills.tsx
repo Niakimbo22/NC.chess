@@ -322,7 +322,7 @@ function DrillPlayer({
             <button
               className="drill-replay"
               title="Réécouter"
-              onClick={() => speak(solved ? challenge.success : challenge.task)}
+              onClick={() => speak(solved ? challenge.success : challenge.task, { force: true })}
             >
               🔊
             </button>
@@ -338,7 +338,7 @@ function DrillPlayer({
             className="drill-hint-btn"
             onClick={() => {
               setFeedback({ text: challenge.hint, kind: 'hint' });
-              speak(challenge.hint);
+              speak(challenge.hint, { force: true });
             }}
           >
             💡 Indication

@@ -3,7 +3,7 @@ import OpeningLabel from '../components/OpeningLabel';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Color } from 'chess.js';
 import Chessboard from '../components/board/Chessboard';
-import { GameOverModal, MoveList, NavButtons, PlayerBar, ReviewBanner } from '../components/GamePanel';
+import { GameOverModal, MoveList, MoveNav, PlayerBar, ReviewBanner } from '../components/GamePanel';
 import TimeControlPicker from '../components/TimeControlPicker';
 import { TIME_CONTROLS, customTimeControl, type TimeControl } from '../game/timeControls';
 import { useChessGame, type EndReason } from '../game/useChessGame';
@@ -481,6 +481,7 @@ function FriendGame({
           clockMs={game.clock?.[myColor]}
           clockActive={game.clockRunning && game.turn === myColor && !game.result}
         />
+        <MoveNav history={game.history} viewIndex={game.viewIndex} onGoTo={game.goTo} />
       </div>
       <div className="game-side-col">
         <div className="room-badge">
@@ -516,7 +517,6 @@ function FriendGame({
         )}
         <OpeningLabel history={game.history} />
         <MoveList history={game.history} viewIndex={game.viewIndex} onSelect={game.goTo} />
-        <NavButtons historyLength={game.history.length} viewIndex={game.viewIndex} onGoTo={game.goTo} />
         <div className="game-actions">
           {!game.result ? (
             <>

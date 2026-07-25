@@ -266,7 +266,7 @@ function ReviewView({ sans, white, black, onBack }: { sans: string[]; white: str
           <NeoAvatar size={40} className="coach-face" />
           <p>{comment}</p>
           {settings.coachVoice && (
-            <button title="Écouter" onClick={() => speak(comment)}>🔊</button>
+            <button title="Écouter" onClick={() => speak(comment, { force: true })}>🔊</button>
           )}
         </div>
       </div>

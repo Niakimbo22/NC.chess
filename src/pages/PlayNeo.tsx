@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Chess, type Color, type Square } from 'chess.js';
 import Chessboard, { type Arrow, type BoardMove } from '../components/board/Chessboard';
-import { GameOverModal, MoveList, NavButtons, PlayerBar, ReviewBanner } from '../components/GamePanel';
+import { GameOverModal, MoveList, MoveNav, PlayerBar, ReviewBanner } from '../components/GamePanel';
 import TimeControlPicker from '../components/TimeControlPicker';
 import OpeningLabel from '../components/OpeningLabel';
 import { TIME_CONTROLS, type TimeControl } from '../game/timeControls';
@@ -217,9 +217,12 @@ function NeoGame({ config, onExit, onRematch }: { config: NeoConfig; onExit: () 
 
   // Affiche une réplique de Néo. `sticky` reste jusqu'au prochain message,
   // sinon elle s'efface toute seule. Lecture vocale optionnelle.
-  const talk = useCallback((text: string, tone: CoachMsg['tone'] = 'neutral', sticky = false, voice = false) => {
+  // `voice` : false = écrit seulement, true = lu si tu as demandé « tout »,
+  // 'important' = lu dès que la voix est active (avertissement, conseil
+  // demandé, fin de partie — jamais du bavardage).
+  const talk = useCallback((text: string, tone: CoachMsg['tone'] = 'neutral', sticky = false, voice: boolean | 'important' = false) => {
     setCoach({ text, tone });
-    if (voice) speak(text);
+    if (voice) speak(text, { important: voice === 'important' });
     if (clearTimerRef.current) clearTimeout(clearTimerRef.current);
     if (!sticky) clearTimerRef.current = setTimeout(() => setCoach((c) => (c.text === text ? { text: '', tone: 'neutral' } : c)), 6000);
   }, []);
@@ -233,7 +236,7 @@ function NeoGame({ config, onExit, onRematch }: { config: NeoConfig; onExit: () 
       recordedRef.current = true;
       const outcome = result.winner === null ? 'draw' : result.winner === playerColor ? 'win' : 'loss';
       playSound(outcome === 'win' ? 'Victory' : outcome === 'loss' ? 'Defeat' : 'Draw');
-      talk(neoEnd(outcome), outcome === 'loss' ? 'warn' : 'success', true, true);
+      talk(neoEnd(outcome), outcome === 'loss' ? 'warn' : 'success', true, 'important');
       saveGameToHistory({
         mode: 'neo',
         white: playerColor === 'w' ? profile.pseudo : level.name,
@@ -296,7 +299,7 @@ function NeoGame({ config, onExit, onRematch }: { config: NeoConfig; onExit: () 
       const better = before.best ? uciToSan(fenBefore, before.best) : null;
       const text = neoWarn(cls, reason, better ?? undefined);
       setWarning({ text, cls });
-      talk(text, 'warn', true, true);
+      talk(text, 'warn', true, 'important');
       return; // Néo attend ta décision : il ne joue pas.
     }
 
@@ -415,7 +418,7 @@ function NeoGame({ config, onExit, onRematch }: { config: NeoConfig; onExit: () 
       moveCount: game.history.length,
       pieceCount: pieceCount(game.fen),
     });
-    talk(text, 'hint', true, true);
+    talk(text, 'hint', true, 'important');
   }, [game, playerColor, talk]);
 
   const takeBack = useCallback(() => {
@@ -470,6 +473,7 @@ function NeoGame({ config, onExit, onRematch }: { config: NeoConfig; onExit: () 
           clockMs={game.clock?.[playerColor]}
           clockActive={game.clockRunning && game.turn === playerColor && !game.result}
         />
+        <MoveNav history={game.history} viewIndex={game.viewIndex} onGoTo={game.goTo} />
       </div>
 
       <div className="game-side-col">
@@ -493,7 +497,12 @@ function NeoGame({ config, onExit, onRematch }: { config: NeoConfig; onExit: () 
                 className="neo-voice-toggle"
                 onClick={() => {
                   stopSpeaking();
-                  settings.set({ coachVoice: !settings.coachVoice });
+                  const on = !settings.coachVoice;
+                  settings.set({ coachVoice: on });
+                  // Un mot de confirmation : il prouve que la voix marche, et
+                  // sur iOS il « déverrouille » la synthèse, qui exige que la
+                  // toute première phrase parte d'un geste de l'utilisateur.
+                  if (on) setTimeout(() => speak('Voix activée.', { force: true }), 0);
                 }}
                 title={settings.coachVoice ? 'Couper la voix de Néo' : 'Réactiver la voix de Néo'}
                 aria-label={settings.coachVoice ? 'Couper la voix de Néo' : 'Réactiver la voix de Néo'}
@@ -524,7 +533,6 @@ function NeoGame({ config, onExit, onRematch }: { config: NeoConfig; onExit: () 
         <GameSheet label={game.result ? 'Partie terminée' : 'Coups & options'}>
           <OpeningLabel history={game.history} />
           <MoveList history={game.history} viewIndex={game.viewIndex} onSelect={game.goTo} />
-          <NavButtons historyLength={game.history.length} viewIndex={game.viewIndex} onGoTo={game.goTo} />
 
           <div className="game-actions">
             {!game.result ? (

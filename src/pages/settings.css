@@ -108,5 +108,43 @@
 }
 .voice-note strong { color: var(--gold-light); }
 
+.voice-hint {
+  margin: 2px 0 8px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+
+.voice-scope { margin: 10px 0 4px; }
+.voice-scope > span { font-size: 13px; color: var(--text-dim); }
+.voice-scope-choices { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.voice-scope-choices button {
+  flex: 1 1 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+  text-align: left;
+  padding: 9px 11px;
+  font-size: 13.5px;
+  font-weight: 600;
+  border-radius: 9px;
+}
+.voice-scope-choices button em {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  line-height: 1.35;
+}
+.voice-scope-choices button.selected {
+  border-color: var(--accent);
+  background: rgba(212, 175, 55, 0.14);
+}
+.voice-scope-choices button.selected em { color: var(--gold-light); }
+
+.voice-test-row { display: flex; gap: 8px; margin-top: 8px; }
+.voice-test-row button { flex: 1; padding: 10px; font-size: 14px; }
+
 .about-note { color: var(--text-dim); font-size: 13px; margin: 10px 0 0; }
 .about-note em { font-style: normal; color: var(--gold-light); }

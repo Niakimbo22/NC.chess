@@ -185,11 +185,11 @@ function LessonPlayer({
             {message && <p className={`lesson-msg ${messageKind}`}>{message}</p>}
           </div>
           {settings.coachVoice && (
-            <button title="Réécouter" onClick={() => speak(message && messageKind === 'success' ? message : step.text)}>🔊</button>
+            <button title="Réécouter" onClick={() => speak(message && messageKind === 'success' ? message : step.text, { force: true })}>🔊</button>
           )}
         </div>
         {step.task && !solved && (
-          <button onClick={() => { setMessage(step.task!.hint); setMessageKind('hint'); speak(step.task!.hint); }}>
+          <button onClick={() => { setMessage(step.task!.hint); setMessageKind('hint'); speak(step.task!.hint, { force: true }); }}>
             💡 Indice
           </button>
         )}

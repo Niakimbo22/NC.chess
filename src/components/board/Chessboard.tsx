@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Chess, type Square, type PieceSymbol, type Color } from 'chess.js';
+import { castlingAliases } from '../../game/castling';
 import { getBoardTheme, pieceUrl } from '../../themes/boardThemes';
 import { useSettings } from '../../store/settings';
 import './board.css';
@@ -102,6 +103,12 @@ export default function Chessboard({
     return new Set(chess.moves({ square: selected, verbose: true }).map((m) => m.to));
   }, [selected, chess, isMyTurn]);
 
+  // Cases supplémentaires acceptées pour roquer avec la pièce sélectionnée.
+  const castleAliases = useMemo(
+    () => (selected && isMyTurn ? castlingAliases(chess, selected) : new Map<Square, Square>()),
+    [selected, chess, isMyTurn]
+  );
+
   // Exécute le pré-coup dès que c'est notre tour
   useEffect(() => {
     if (!premove || playableColor === 'both' || playableColor === null) return;
@@ -144,19 +151,22 @@ export default function Chessboard({
   );
 
   const tryMove = useCallback(
-    (from: Square, to: Square) => {
-      if (from === to) return;
+    (from: Square, target: Square) => {
+      if (from === target) return;
       const piece = chess.get(from);
       if (!piece || !canPlay(piece.color)) return;
 
       // Pas notre tour → pré-coup
       if (piece.color !== turn) {
         if (settings.premoveEnabled && playableColor !== 'both') {
-          setPremove({ from, to });
+          setPremove({ from, to: target });
           setSelected(null);
         }
         return;
       }
+
+      // « Roi posé sur sa tour » → case réelle du roque.
+      const to = castlingAliases(chess, from).get(target) ?? target;
 
       const legal = chess.moves({ square: from, verbose: true }).some((m) => m.to === to);
       if (!legal) {
@@ -208,7 +218,9 @@ export default function Chessboard({
 
       const piece = chess.get(square);
 
-      if (selected && legalTargets.has(square)) {
+      // Le roque par la tour passe AVANT la sélection : sans ça, cliquer sa
+      // propre tour sélectionnait la tour au lieu de roquer.
+      if (selected && (legalTargets.has(square) || castleAliases.has(square))) {
         tryMove(selected, square);
         return;
       }
@@ -229,7 +241,7 @@ export default function Chessboard({
         setSelected(null);
       }
     },
-    [interactive, squareFromEvent, chess, selected, legalTargets, tryMove, canPlay, premove, turn, playableColor]
+    [interactive, squareFromEvent, chess, selected, legalTargets, castleAliases, tryMove, canPlay, premove, turn, playableColor]
   );
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
@@ -303,6 +315,10 @@ export default function Chessboard({
           {successSquare === square && <span className="nc-success-badge">✓</span>}
           {settings.showLegalMoves && legalTargets.has(square) && (
             <div className={chess.get(square) ? 'nc-capture-hint' : 'nc-move-hint'} />
+          )}
+          {/* Anneau doré sur la tour : dit qu'on peut y poser le roi pour roquer. */}
+          {settings.showLegalMoves && !legalTargets.has(square) && castleAliases.has(square) && chess.get(square) && (
+            <div className="nc-capture-hint nc-castle-hint" />
           )}
           {settings.showCoordinates && x === 0 && (
             <span className="nc-coord nc-coord-rank" style={{ color: isLight ? theme.dark : theme.light }}>
