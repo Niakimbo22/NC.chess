@@ -32,6 +32,7 @@
 - **Barre de relecture** sous l'échiquier (⏮ ◀ ▶ ⏭, flèches du clavier) : revoir le coup de l'adversaire sans rien changer à la partie.
 - Roque au geste naturel : le roi se pose sur sa tour, ou sur sa case habituelle.
 - Profil local : pseudo, 20 avatars, Elo avec graphe de progression, stats par cadence, historique des parties.
+- Néo parle en français clair, jamais en notation brute : « ton fou de c4 prend le cavalier en f7 (Bxf7) ».
 - Voix de Néo **coupée par défaut** : elle s'active en un geste, et se règle (voix du système, débit, hauteur, et quand Néo parle).
 
 ### 📱 Partout

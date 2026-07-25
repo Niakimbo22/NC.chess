@@ -172,7 +172,9 @@ export function neoNudge(): string {
 /**
  * Avertissement AVANT de valider une gaffe (boîte de dialogue). `reason` décrit
  * ce qui cloche (ex. « ça laisse ta dame en prise ») quand on a pu le détecter,
- * et `better` le meilleur coup en notation lisible.
+ * et `better` le meilleur coup **décrit en français clair** (voir `moveWords`) :
+ * « ton fou de c4 prend le cavalier en f7, avec échec (Bxf7+) ». Surtout pas un
+ * « Qxe6 » brut, illisible quand on apprend.
  */
 export function neoWarn(cls: 'mistake' | 'blunder', reason?: string, better?: string): string {
   const head = cls === 'blunder'
@@ -183,7 +185,7 @@ export function neoWarn(cls: 'mistake' | 'blunder', reason?: string, better?: st
     : cls === 'blunder'
       ? ' Ce coup perd gros.'
       : ' Il y a bien mieux ici.';
-  const tail = better ? ` Regarde plutôt du côté de ${better}.` : ' Tu veux vraiment le jouer ?';
+  const tail = better ? ` À la place, regarde ça : ${better}.` : ' Tu veux vraiment le jouer ?';
   return head + body + tail;
 }
 

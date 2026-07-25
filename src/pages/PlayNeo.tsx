@@ -21,6 +21,7 @@ import { useProfile } from '../store/profile';
 import { saveGameToHistory } from '../store/gameHistory';
 import { playSound } from '../audio/sounds';
 import { speak, stopSpeaking } from '../coach/voice';
+import { moveWords } from '../coach/moveWords';
 import { useSettings } from '../store/settings';
 import './playNeo.css';
 
@@ -167,16 +168,6 @@ function hangingPiece(fenAfter: string): string | null {
   return best;
 }
 
-function uciToSan(fen: string, uci: string): string | null {
-  try {
-    const c = new Chess(fen);
-    const move = c.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.length > 4 ? uci[4] : undefined });
-    return move.san;
-  } catch {
-    return null;
-  }
-}
-
 const PIECE_VALUE: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 function pieceCount(fen: string): number {
   let n = 0;
@@ -296,7 +287,8 @@ function NeoGame({ config, onExit, onRematch }: { config: NeoConfig; onExit: () 
       // Interruption pédagogique : on explique et on propose de reprendre.
       const hang = hangingPiece(fenAfter);
       const reason = hang ? `laisse ${PIECE_FR[hang]} en prise` : undefined;
-      const better = before.best ? uciToSan(fenBefore, before.best) : null;
+      // En clair, pas en notation : « Qxe6 » ne veut rien dire quand on apprend.
+      const better = before.best ? moveWords(fenBefore, before.best) : null;
       const text = neoWarn(cls, reason, better ?? undefined);
       setWarning({ text, cls });
       talk(text, 'warn', true, 'important');

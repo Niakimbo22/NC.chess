@@ -1,4 +1,5 @@
 import { Chess, type Color, type Move } from 'chess.js';
+import { capitalize, moveWords } from '../coach/moveWords';
 import { Engine, evalToWhiteCp } from './engine';
 
 export type MoveClass =
@@ -186,12 +187,24 @@ export async function analyzeGame(
   };
 }
 
-const PIECE_TAKEN_FR: Record<string, string> = {
-  p: 'un pion', n: 'un cavalier', b: 'un fou', r: 'une tour', q: 'la dame', k: 'le roi',
-};
+/**
+ * Le coup en français clair, notation entre parenthèses : « ton cavalier de g1
+ * va en f3 (Nf3) ». Repli sur la notation seule si la position est incohérente.
+ */
+function words(fenBefore: string, san: string): string {
+  return moveWords(fenBefore, san) ?? san;
+}
 
-/** Reconstruit l'objet Move d'un coup analysé (pour connaître prise, roque, échec…). */
-function safeMove(m: AnalyzedMove): Move | null {
+/** Ce que le coup apporte, au-delà de sa description (roque = roi à l'abri). */
+function describeAction(m: AnalyzedMove): string {
+  const mv = playedMove(m);
+  if (!mv) return '';
+  if (mv.flags.includes('k') || mv.flags.includes('q')) return 'Ton roi est à l’abri.';
+  return '';
+}
+
+/** Reconstruit l'objet Move d'un coup analysé. */
+function playedMove(m: AnalyzedMove): Move | null {
   try {
     const chess = new Chess(m.fenBefore);
     return chess.move({
@@ -202,20 +215,6 @@ function safeMove(m: AnalyzedMove): Move | null {
   } catch {
     return null;
   }
-}
-
-/** Décrit l'action concrète du coup (prise, roque, promotion, échec). */
-function describeAction(mv: Move): string {
-  if (mv.flags.includes('k') || mv.flags.includes('q')) return 'Tu mets ton roi à l’abri en roquant.';
-  if (mv.flags.includes('e')) return 'Tu captures en passant.';
-  if (mv.promotion) return `Tu promeus ${mv.promotion === 'q' ? 'en dame' : 'ta pièce'}.`;
-  if (mv.captured) {
-    const check = mv.san.includes('+') ? ' avec échec' : '';
-    return `Tu prends ${PIECE_TAKEN_FR[mv.captured]}${check}.`;
-  }
-  if (mv.san.includes('#')) return 'Échec et mat !';
-  if (mv.san.includes('+')) return 'Tu donnes échec.';
-  return '';
 }
 
 /** Décrit la situation d'évaluation après le coup, du point de vue du joueur. */
@@ -230,30 +229,49 @@ function describeEval(cpAfterWhite: number, mover: Color): string {
   return 'Ta position est désormais difficile.';
 }
 
+/**
+ * Ce que le coup a coûté. Un mat ne se compte pas en points : « coûte 100.3
+ * points » est le genre de chiffre qui ne veut rien dire (l'évaluation d'un mat
+ * vaut 10 000 centipions en interne, pas cent pions sur l'échiquier).
+ */
+function costOf(m: AnalyzedMove): string {
+  const cpAfterMover = m.color === 'w' ? m.cpAfter : -m.cpAfter;
+  if (cpAfterMover <= -9000) return 'il offre le mat à l’adversaire';
+  if (m.cpLoss >= 9000) return 'il laisse filer un mat gagnant';
+  const points = (m.cpLoss / 100).toFixed(1);
+  return `il coûte environ ${points} point${Number(points) >= 2 ? 's' : ''}`;
+}
+
 /** Commentaire du coach en français, détaillé et pédagogique, pour un coup analysé. */
 export function coachComment(m: AnalyzedMove): string {
-  const detail = safeMove(m);
-  const action = detail ? describeAction(detail) : '';
+  // Le coup joué et le coup conseillé sont dits en clair : « Qxe6 » est
+  // illisible quand on apprend, et c'est précisément le moment où l'on apprend.
+  const played = capitalize(words(m.fenBefore, m.san));
+  const action = describeAction(m);
   const best = m.bestLineSan[0];
+  const bestWords = best ? words(m.fenBefore, best) : '';
   const bestLine = m.bestLineSan.slice(0, 3).join(' ');
-  const lossP = (m.cpLoss / 100).toFixed(1);
   const evalTxt = describeEval(m.cpAfter, m.color);
+  // Le coup conseillé est une phrase (« ton pion de g7 avance en g6 ») : on
+  // l'introduit toujours par deux points. « Il fallait que … » imposerait le
+  // subjonctif, et donnerait « il fallait que ton fou va en c4 ».
+  const instead = bestWords ? `${bestWords}` : '';
 
   switch (m.classification) {
     case 'brilliant':
-      return `✨ Coup brillant ! ${m.san} — ${action || 'un sacrifice audacieux'} Tu donnes du matériel pour un avantage bien plus grand : même le moteur applaudit. ${evalTxt}`;
+      return `✨ Coup brillant ! ${played} — un sacrifice audacieux. Tu donnes du matériel pour un avantage bien plus grand : même le moteur applaudit. ${action} ${evalTxt}`.replace(/\s+/g, ' ').trim();
     case 'best':
-      return `${m.san} : le meilleur coup possible, exactement le choix du moteur. ${action} ${evalTxt}`.trim();
+      return `${played} : le meilleur coup possible, exactement le choix du moteur. ${action} ${evalTxt}`.replace(/\s+/g, ' ').trim();
     case 'excellent':
-      return `${m.san} est excellent, à un cheveu du meilleur coup. ${action} ${evalTxt}`.trim();
+      return `${played} : excellent, à un cheveu du meilleur coup. ${action} ${evalTxt}`.replace(/\s+/g, ' ').trim();
     case 'good':
-      return `${m.san} est un coup solide. ${best && best !== m.san ? `Le moteur préférait ${best}, mais ton choix ne gâche rien.` : ''} ${evalTxt}`.trim();
+      return `${played} : un coup solide. ${instead && best !== m.san ? `Le moteur préférait ceci : ${instead}. Mais ton choix ne gâche rien.` : ''} ${evalTxt}`.replace(/\s+/g, ' ').trim();
     case 'inaccuracy':
-      return `${m.san} est une imprécision (tu laisses filer ~${lossP} point${Number(lossP) >= 2 ? 's' : ''}). ${best ? `${best} gardait mieux la main.` : ''} Rien de dramatique, mais on peut faire plus net. ${evalTxt}`.trim();
+      return `${played} : une imprécision, ${costOf(m)}. ${instead ? `Plus net : ${instead}.` : ''} Rien de dramatique, mais on peut faire mieux. ${evalTxt}`.replace(/\s+/g, ' ').trim();
     case 'mistake':
-      return `${m.san} est une erreur : tu concèdes environ ${lossP} points. ${best ? `Il fallait jouer ${best}${bestLine && m.bestLineSan.length > 1 ? ` (la suite : ${bestLine})` : ''}.` : ''} ${evalTxt}`.trim();
+      return `${played} : une erreur, ${costOf(m)}. ${instead ? `Il fallait jouer : ${instead}${bestLine && m.bestLineSan.length > 1 ? ` (la suite : ${bestLine})` : ''}.` : ''} ${evalTxt}`.replace(/\s+/g, ' ').trim();
     case 'blunder':
-      return `❌ Grosse gaffe ! ${m.san} coûte ${lossP} points d’un seul coup. ${best ? `${best} était bien plus fort${bestLine && m.bestLineSan.length > 1 ? ` — par exemple ${bestLine}.` : '.'}` : ''} ${evalTxt} Le réflexe à prendre : avant de jouer, vérifie les prises et les menaces de l’adversaire.`.trim();
+      return `❌ Grosse gaffe ! ${played} : ${costOf(m)}. ${instead ? `Il fallait jouer : ${instead}${bestLine && m.bestLineSan.length > 1 ? ` — par exemple ${bestLine}.` : '.'}` : ''} ${evalTxt} Le réflexe à prendre : avant de jouer, vérifie les prises et les menaces de l’adversaire.`.replace(/\s+/g, ' ').trim();
   }
 }
 
@@ -340,7 +358,8 @@ export function buildReviewSummary(
       const moveNo = Math.floor(worstIdx / 2) + 1;
       const name = SIDE(color, whiteName, blackName);
       const best = w.bestLineSan[0];
-      const text = `Le coup à revoir de ${name} : ${moveNo}.${color === 'w' ? '' : '..'} ${w.san} (−${(w.cpLoss / 100).toFixed(1)}).${best ? ` ${best} tenait la position.` : ''}`;
+      const bestWords = best ? words(w.fenBefore, best) : '';
+      const text = `Le coup à revoir de ${name}, au coup ${moveNo} : ${words(w.fenBefore, w.san)} — ${costOf(w)}.${bestWords ? ` ${capitalize(bestWords)} : ça tenait la position.` : ''}`;
       keyMoments.push({ cursor: worstIdx, moveNo, san: w.san, color, text });
     }
   }
@@ -366,7 +385,7 @@ export function buildReviewSummary(
       moveNo,
       san: mv.san,
       color: mv.color,
-      text: `⚡ Le tournant : coup ${moveNo} (${mv.san}). C’est là que l’avantage a basculé en faveur de ${benefited}.`,
+      text: `⚡ Le tournant : coup ${moveNo}, ${words(mv.fenBefore, mv.san)}. C’est là que l’avantage a basculé en faveur de ${benefited}.`,
     });
   }
 

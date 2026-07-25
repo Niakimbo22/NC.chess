@@ -5,6 +5,7 @@ import Chessboard, { type Arrow, type BoardMove } from '../components/board/Ches
 import NeoAvatar from '../components/NeoAvatar';
 import { DRILL_MODULES, type DrillChallenge, type DrillModule } from '../data/drills';
 import { speak, stopSpeaking } from '../coach/voice';
+import { capitalize, moveWordsFrom } from '../coach/moveWords';
 import { useSettings } from '../store/settings';
 import { playSound } from '../audio/sounds';
 import './drills.css';
@@ -166,7 +167,9 @@ function DrillPlayer({
         setFen(chess.fen());
         setLastMove({ from: move.from, to: move.to });
         setSuccessSquare(move.to);
-        setPlayedSan(figurine(move.san, sideToMove));
+        // Le coup réussi est raconté, pas épelé : « ♘xf5 » n'apprend rien
+        // à qui découvre la notation — elle reste entre parenthèses.
+        setPlayedSan(capitalize(moveWordsFrom(move, { subject: 'neutral', san: figurine(move.san, sideToMove) })));
         setFeedback(null);
         setSolved(true);
         if (firstTry) setScore((s) => s + 1);
@@ -304,7 +307,7 @@ function DrillPlayer({
             {solved ? (
               <>
                 <span className="drill-verdict">
-                  <span className="drill-verdict-check">✓</span> {playedSan} est correct
+                  <span className="drill-verdict-check">✓</span> {playedSan}
                 </span>
                 <p>{challenge.success}</p>
               </>

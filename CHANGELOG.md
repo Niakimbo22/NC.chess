@@ -8,6 +8,28 @@ et le versionnage suit [SemVer](https://semver.org/lang/fr/) :
 La version affichée dans l'app (sidebar + Réglages → À propos) provient de
 `package.json`.
 
+## [0.2.5] — 2026-07-25
+
+### Changé
+- **Néo ne parle plus en notation.** Quand il reprend un coup, conseille mieux,
+  ou commente une partie, il dit ce qui se passe sur l’échiquier : *« ton fou de
+  c4 prend le cavalier en f7, avec échec »* au lieu de `Bxf7+`. La notation est
+  conservée **entre parenthèses** — elle s’apprend au passage sans bloquer la
+  compréhension — et elle est retirée avant la lecture à voix haute, pour ne pas
+  entendre le coup deux fois dont une en charabia. Roques, prises, prise en
+  passant, promotions, échec et mat sont dits en toutes lettres.
+  - Concerné : l’avertissement avant une gaffe (*« À la place, regarde ça :
+    ton pion de d2 avance en d4 (d4) »*), les commentaires de l’analyse, les
+    moments clés du bilan de partie, et le verdict des Défis (*« ✓ La tour de c5
+    prend le cavalier en f5 (♖xf5) »*).
+
+### Corrigé
+- **« Cette gaffe coûte 100.3 points »** dans l’analyse : un mat était compté en
+  points, alors qu’il vaut 10 000 centipions en interne. L’analyse dit désormais
+  « il offre le mat à l’adversaire » ou « il laisse filer un mat gagnant ».
+- Tournures fautives dans l’analyse (« il fallait que ton fou **va** en c4 ») :
+  le coup conseillé est introduit par deux points, sans subjonctif.
+
 ## [0.2.4] — 2026-07-25
 
 ### Corrigé

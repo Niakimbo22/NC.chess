@@ -146,10 +146,16 @@ export function spokenNotation(text: string): string {
  * Retire ce qui ne doit pas être prononcé. Sans ça la synthèse lit les emoji
  * à voix haute (« Parfait. Tu vois loin aujourd'hui. yeux »).
  */
+// Notation rappelée entre parenthèses après une phrase qui dit déjà le coup
+// en clair (« ta dame de d1 prend le fou en e6 (Qxe6) »). À l'écrit elle
+// apprend la notation ; à l'oral elle répéterait le coup une seconde fois,
+// en charabia.
+const PARENTHESIZED_SAN = /\s*\((?:O-O-O|O-O|0-0-0|0-0|[♔♚♕♛♖♜♗♝♘♞]?[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[♕♛♖♜♗♝♘♞QRBN])?[+#]?)\)/g;
+
 export function speakableText(text: string): string {
   // On retire sans rien mettre à la place : insérer une espace décalerait la
   // ponctuation française (« C'est parti ! » deviendrait « C'est parti! »).
-  return spokenNotation(text)
+  return spokenNotation(text.replace(PARENTHESIZED_SAN, ''))
     .replace(/\p{Extended_Pictographic}/gu, '') // emoji
     // Modificateurs : en alternance, pas en classe — un ZWJ ou un sélecteur de
     // variante dans un [...] est ambigu.
