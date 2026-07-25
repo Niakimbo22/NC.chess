@@ -18,7 +18,14 @@ import { loadOpenings, findOpening } from '../data/openingBook';
 import { loadGameHistory } from '../store/gameHistory';
 import { useSettings } from '../store/settings';
 import { speak } from '../coach/voice';
+import NeoSelect from '../components/NeoSelect';
 import './analysis.css';
+
+const DEPTH_OPTIONS = [
+  { value: '10', label: 'Rapide', hint: 'profondeur 10', icon: '⚡' },
+  { value: '12', label: 'Standard', hint: 'profondeur 12', icon: '⚖️' },
+  { value: '16', label: 'Approfondie', hint: 'profondeur 16, plus lent', icon: '🔬' },
+];
 
 type Mode =
   | { kind: 'home' }
@@ -180,14 +187,14 @@ function ReviewView({ sans, white, black, onBack }: { sans: string[]; white: str
         <h1>📊 Analyse de la partie</h1>
         <div className="panel" style={{ textAlign: 'center' }}>
           <p>{sans.length} coups à analyser avec Stockfish.</p>
-          <label style={{ display: 'block', margin: '12px 0' }}>
-            Profondeur :{' '}
-            <select value={depth} onChange={(e) => setDepth(Number(e.target.value))}>
-              <option value={10}>Rapide (profondeur 10)</option>
-              <option value={12}>Standard (profondeur 12)</option>
-              <option value={16}>Approfondie (profondeur 16, plus lent)</option>
-            </select>
-          </label>
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '12px 0' }}>
+            <NeoSelect
+              label="Profondeur"
+              value={String(depth)}
+              options={DEPTH_OPTIONS}
+              onChange={(v) => setDepth(Number(v))}
+            />
+          </div>
           <button className="primary" style={{ fontSize: 17 }} onClick={run}>🚀 Lancer l'analyse</button>
           <button style={{ marginLeft: 8 }} onClick={onBack}>Retour</button>
         </div>

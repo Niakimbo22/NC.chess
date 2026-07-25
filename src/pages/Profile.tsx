@@ -12,6 +12,7 @@ import { useFriends, extractFriendCode, pairRoomCode } from '../store/friends';
 import { loadGameHistory, deleteGameFromHistory, type SavedGame } from '../store/gameHistory';
 import { getBot } from '../bots/bots';
 import NeoAvatar from '../components/NeoAvatar';
+import NeoSelect from '../components/NeoSelect';
 import './profile.css';
 
 export default function Profile() {
@@ -233,12 +234,16 @@ function EditProfileModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          <label className="field">
+          <div className="field">
             <span>Titre</span>
-            <select value={flair} onChange={(e) => setFlair(e.target.value)}>
-              {FLAIRS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
-            </select>
-          </label>
+            <NeoSelect
+              ariaLabel="Titre"
+              block
+              value={flair}
+              options={FLAIRS.map((f) => ({ value: f.id, label: f.label }))}
+              onChange={setFlair}
+            />
+          </div>
 
           <label className="field">
             <span>Drapeau / emoji (optionnel)</span>

@@ -13,8 +13,22 @@ import {
 import { useProfile } from '../store/profile';
 import { playSound } from '../audio/sounds';
 import MascotSpeech from '../components/MascotSpeech';
+import NeoSelect, { type NeoOption } from '../components/NeoSelect';
 import { neoSay, type NeoMood } from '../mascot/neo';
 import './puzzles.css';
+
+// Une icône parlante par thème : la liste respire au lieu d'aligner le même
+// pictogramme partout.
+const THEME_ICONS: Record<string, string> = {
+  mateIn1: '♚', mateIn2: '♚', mateIn3: '♚', backRankMate: '🚪', smotheredMate: '😶',
+  fork: '🍴', pin: '📌', skewer: '🍢', discoveredAttack: '🎭', sacrifice: '💥',
+  hangingPiece: '🎁', promotion: '👑', deflection: '↔️', attraction: '🧲',
+  trappedPiece: '🕸️', endgame: '🏁', middlegame: '⚔️', opening: '📖',
+};
+const THEME_OPTIONS: NeoOption[] = [
+  { value: '', label: 'Tous les thèmes', icon: '🎲' },
+  ...FILTERABLE_THEMES.map((t) => ({ value: t, label: THEME_FR[t] ?? t, icon: THEME_ICONS[t] ?? '🎯' })),
+];
 
 type NeoTone = 'neutral' | 'success' | 'warn';
 function moodTone(mood: NeoMood): NeoTone {
@@ -373,15 +387,16 @@ function Training({ pool }: { pool: Puzzle[] }) {
           </>
         )}
       </div>
-      <label className="panel puzzle-filter">
-        Thème :
-        <select value={theme ?? ''} onChange={(e) => setTheme(e.target.value || null)}>
-          <option value="">Tous les thèmes</option>
-          {FILTERABLE_THEMES.map((t) => (
-            <option key={t} value={t}>{THEME_FR[t] ?? t}</option>
-          ))}
-        </select>
-      </label>
+      <div className="panel puzzle-filter">
+        <NeoSelect
+          label="🎯 Thème"
+          ariaLabel="Filtrer par thème"
+          block
+          value={theme ?? ''}
+          options={THEME_OPTIONS}
+          onChange={(v) => setTheme(v || null)}
+        />
+      </div>
       <div className="game-actions">
         {solver.state === 'playing' ? (
           <>

@@ -4,6 +4,7 @@ import { BOARD_THEMES, PIECE_SETS, SOUND_PACKS, pieceUrl } from '../themes/board
 import { playSound } from '../audio/sounds';
 import { listFrenchVoices, resetVoiceCache, speak } from '../coach/voice';
 import { APP_VERSION } from '../version';
+import NeoSelect from '../components/NeoSelect';
 import './settings.css';
 
 export default function Settings() {
@@ -150,20 +151,20 @@ function VoicePicker() {
   return (
     <div className="slider-row" style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
       <span>Voix :</span>
-      <select
-        style={{ flex: 1 }}
+      <NeoSelect
+        ariaLabel="Voix du coach"
+        block
         value={s.coachVoiceName ?? ''}
-        onChange={(e) => {
-          s.set({ coachVoiceName: e.target.value || null });
+        options={[
+          { value: '', label: 'Automatique (meilleure voix détectée)', icon: '🎙️' },
+          ...voices.map((v) => ({ value: v.name, label: v.name })),
+        ]}
+        onChange={(v) => {
+          s.set({ coachVoiceName: v || null });
           resetVoiceCache();
           setTimeout(() => speak('Bonjour ! Je suis ton coach d’échecs.'), 100);
         }}
-      >
-        <option value="">Automatique (meilleure voix détectée)</option>
-        {voices.map((v) => (
-          <option key={v.name} value={v.name}>{v.name}</option>
-        ))}
-      </select>
+      />
       <button onClick={() => speak('Bonjour ! Je suis ton coach d’échecs. En avant pour la victoire !')}>▶ Tester</button>
     </div>
   );
