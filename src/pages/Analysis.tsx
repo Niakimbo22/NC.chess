@@ -10,11 +10,15 @@ import {
   buildReviewSummary,
   coachComment,
   MOVE_CLASS_INFO,
+  MOVE_CLASS_ORDER,
   type GameAnalysis,
   type MoveClass,
   type ReviewSummary,
 } from '../engine/analysis';
-import { loadOpenings, findOpening } from '../data/openingBook';
+import MoveBadge from '../components/MoveBadge';
+import GameReport from '../components/GameReport';
+import GuidedReview from '../components/GuidedReview';
+import { loadOpenings, findOpening, bookDepth } from '../data/openingBook';
 import { loadGameHistory } from '../store/gameHistory';
 import { useSettings } from '../store/settings';
 import { speak } from '../coach/voice';
@@ -134,8 +138,20 @@ function ReviewView({ sans, white, black, onBack }: { sans: string[]; white: str
   const [flipped, setFlipped] = useState(false);
   const [exploreFen, setExploreFen] = useState<string | null>(null);
   const [exploreFromMove, setExploreFromMove] = useState(0);
+  const [view, setView] = useState<'report' | 'guided' | 'details'>('report');
+  const [bookPlies, setBookPlies] = useState(0);
   const engineRef = useRef<Engine | null>(null);
   const signalRef = useRef({ cancelled: false });
+
+  // Charge le livre d'ouvertures avant l'analyse : les coups de théorie sont
+  // classés « Théorique » plutôt que jugés au centipion près.
+  useEffect(() => {
+    let alive = true;
+    loadOpenings().then(() => {
+      if (alive) setBookPlies(bookDepth(sans));
+    });
+    return () => { alive = false; };
+  }, [sans]);
 
   // Construit le bilan narratif dès que l'analyse est prête (avec l'ouverture).
   useEffect(() => {
@@ -165,14 +181,16 @@ function ReviewView({ sans, white, black, onBack }: { sans: string[]; white: str
     engineRef.current = engine;
     const result = await analyzeGame(sans, engine, {
       depth,
+      bookPlies,
       onProgress: (done, total) => setProgress(Math.round((done / total) * 100)),
       signal: signalRef.current,
     });
     if (result) {
       setAnalysis(result);
       setCursor(result.moves.length - 1);
+      setView('report');
     }
-  }, [sans, depth]);
+  }, [sans, depth, bookPlies]);
 
   if (!started) {
     return (
@@ -205,6 +223,26 @@ function ReviewView({ sans, white, black, onBack }: { sans: string[]; white: str
         </div>
       </div>
     );
+  }
+
+  if (view === 'report') {
+    return (
+      <GameReport
+        analysis={analysis}
+        summary={summary}
+        white={white}
+        black={black}
+        bookPlies={bookPlies}
+        onStartGuided={() => setView('guided')}
+        onOpenDetails={() => setView('details')}
+        onSeek={(c) => { setCursor(c); setView('details'); }}
+        onBack={onBack}
+      />
+    );
+  }
+
+  if (view === 'guided') {
+    return <GuidedReview analysis={analysis} white={white} black={black} onExit={() => setView('report')} />;
   }
 
   const current = cursor >= 0 ? analysis.moves[cursor] : null;
@@ -305,13 +343,13 @@ function ReviewView({ sans, white, black, onBack }: { sans: string[]; white: str
         <EvalGraph analysis={analysis} cursor={cursor} onSeek={setCursor} />
 
         <div className="class-summary">
-          {(Object.keys(MOVE_CLASS_INFO) as MoveClass[]).map((cls) => {
+          {MOVE_CLASS_ORDER.map((cls: MoveClass) => {
             const total = analysis.counts.w[cls] + analysis.counts.b[cls];
             if (total === 0) return null;
             const info = MOVE_CLASS_INFO[cls];
             return (
-              <div key={cls} className="class-line">
-                <span className="class-symbol" style={{ color: info.color }}>{info.symbol}</span>
+              <div key={cls} className="class-line" title={info.blurb}>
+                <MoveBadge cls={cls} size={20} />
                 <span>{info.label}</span>
                 <span style={{ marginLeft: 'auto', color: 'var(--text-dim)' }}>
                   {analysis.counts.w[cls]} / {analysis.counts.b[cls]}
@@ -322,20 +360,17 @@ function ReviewView({ sans, white, black, onBack }: { sans: string[]; white: str
         </div>
 
         <div className="review-movelist">
-          {analysis.moves.map((m, i) => {
-            const info = MOVE_CLASS_INFO[m.classification];
-            return (
-              <button
-                key={i}
-                className={`review-move ${cursor === i ? 'current' : ''}`}
-                onClick={() => setCursor(i)}
-              >
-                <span className="review-move-num">{m.color === 'w' ? `${Math.floor(i / 2) + 1}.` : ''}</span>
-                <span>{m.san}</span>
-                <span className="class-symbol" style={{ color: info.color }}>{info.symbol}</span>
-              </button>
-            );
-          })}
+          {analysis.moves.map((m, i) => (
+            <button
+              key={i}
+              className={`review-move ${cursor === i ? 'current' : ''}`}
+              onClick={() => setCursor(i)}
+            >
+              <span className="review-move-num">{m.color === 'w' ? `${Math.floor(i / 2) + 1}.` : ''}</span>
+              <span>{m.san}</span>
+              <MoveBadge cls={m.classification} size={16} />
+            </button>
+          ))}
         </div>
 
         {current && current.bestLineSan.length > 0 && (
@@ -343,7 +378,10 @@ function ReviewView({ sans, white, black, onBack }: { sans: string[]; white: str
             <strong>Meilleure ligne :</strong> {current.bestLineSan.join(' ')}
           </div>
         )}
-        <button onClick={onBack}>← Autre partie</button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button style={{ flex: 1 }} onClick={() => setView('report')}>← Bilan</button>
+          <button style={{ flex: 1 }} onClick={onBack}>Autre partie</button>
+        </div>
       </div>
     </div>
   );

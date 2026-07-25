@@ -29,6 +29,10 @@ interface Props {
   markedSquares?: Square[];
   /** Case de réussite : pastille verte ✓ (défis) */
   successSquare?: Square | null;
+  /** Cases surlignées avec une couleur libre (revue de partie) */
+  highlights?: { square: Square; color: string }[];
+  /** Pastille de classification posée au coin d'une case (revue de partie) */
+  badge?: { square: Square; symbol: string; color: string } | null;
   interactive?: boolean;
 }
 
@@ -62,6 +66,8 @@ export default function Chessboard({
   arrows = [],
   markedSquares = [],
   successSquare = null,
+  highlights = [],
+  badge = null,
   interactive = true,
 }: Props) {
   const settings = useSettings();
@@ -285,6 +291,7 @@ export default function Chessboard({
       const isPremove = premove && (premove.from === square || premove.to === square);
       const isMarked = userShapes.squares.includes(square) || markedSquares.includes(square);
       const isCheck = kingSquare === square;
+      const highlight = highlights.find((h) => h.square === square);
       squares.push(
         <div
           key={square}
@@ -296,6 +303,7 @@ export default function Chessboard({
           }}
         >
           {isLast && <div className="nc-overlay" style={{ background: theme.lastMove }} />}
+          {highlight && <div className="nc-overlay" style={{ background: highlight.color }} />}
           {isSelected && <div className="nc-overlay" style={{ background: theme.selected }} />}
           {isPremove && <div className="nc-overlay" style={{ background: 'rgba(30, 130, 230, 0.45)' }} />}
           {isMarked && <div className="nc-overlay" style={{ background: 'rgba(224, 40, 40, 0.55)' }} />}
@@ -354,6 +362,18 @@ export default function Chessboard({
           />
         );
       })}
+
+      {badge && (() => {
+        const { x, y } = squareToXY(badge.square, orientation);
+        return (
+          <span
+            className="nc-class-badge"
+            style={{ left: `${x * 12.5 + 9.5}%`, top: `${y * 12.5 - 2}%`, background: badge.color }}
+          >
+            {badge.symbol}
+          </span>
+        );
+      })()}
 
       <svg className="nc-arrows" viewBox="0 0 100 100">
         {[...arrows, ...userShapes.arrows].map((a, i) => {

@@ -136,3 +136,29 @@
 @media (prefers-reduced-motion: reduce) {
   .nc-success-badge { animation: none; }
 }
+
+/* Pastille de classification posée au coin d'une case (revue de partie) */
+.nc-class-badge {
+  position: absolute;
+  z-index: 12;
+  width: 7%;
+  height: 7%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 900;
+  font-size: min(2.6vw, 17px);
+  line-height: 1;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  animation: badgePop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes badgePop {
+  from { transform: scale(0.2); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nc-class-badge { animation: none; }
+}

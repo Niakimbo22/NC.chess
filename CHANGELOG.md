@@ -8,6 +8,42 @@ et le versionnage suit [SemVer](https://semver.org/lang/fr/) :
 La version affichée dans l'app (sidebar + Réglages → À propos) provient de
 `package.json`.
 
+## [0.3.0] — 2026-07-25
+
+### Ajouté
+- **Bilan de la partie**, un nouvel écran d’accueil de l’analyse : les deux
+  joueurs côte à côte, la précision de chacun en gros, et le décompte des coups
+  par catégorie avec une **pastille ronde de couleur** (‼ brillant, ★ meilleur,
+  📖 théorique, ?! imprécision, ✕ coup manqué, ?? gaffe). Trois lignes
+  supplémentaires notent chaque camp sur l’**ouverture, le milieu de jeu et la
+  finale**. Le pavé de texte narratif n’est plus la première chose qu’on voit :
+  il reste accessible via « Analyse détaillée ».
+- **Revue guidée** (bouton « Démarrer le bilan ») : Néo commente la partie
+  moment marquant par moment marquant, en une phrase, avec un seul bouton
+  « Suivant » pour avancer. La revue s’arrête sur ce qui compte (théorie
+  d’ouverture, coups brillants, erreurs, gaffes, occasions manquées) au lieu de
+  dérouler les quarante coups.
+- **Vocabulaire cliquable.** Les mots d’échecs employés par Néo — fourchette,
+  clouage, pion passé, en prise, développement, roque, initiative… — sont
+  surlignés dans la bulle. Un appui affiche leur définition en une phrase.
+- **« Réessayer » : rejoue la position toi-même.** Sur une imprécision, une
+  erreur, une gaffe ou un coup manqué, l’échiquier redevient jouable à la
+  position d’avant le coup. Trouve le coup du moteur et Néo valide ; à côté, la
+  position revient en place pour un nouvel essai. La flèche de la solution est
+  masquée pendant l’exercice — le bouton « Meilleur » la révèle.
+- **Deux nouvelles catégories de coups.** « Théorique » 📖 pour les coups
+  d’ouverture reconnus par le livre (ils ne sont plus jugés au centipion près),
+  et « Coup manqué » ✕ quand un mat forcé ou un gain net était disponible et
+  qu’on est passé à côté — ce n’est pas la même faute qu’une gaffe.
+- **Pastille de classification sur l’échiquier**, posée au coin de la case
+  d’arrivée du coup commenté, et cases surlignées en rouge sur les gaffes.
+- **Bande de coups horizontale** sous l’échiquier pendant la revue guidée : elle
+  suit le coup courant et permet de revenir à n’importe quel moment marquant.
+
+### Modifié
+- Les listes de coups et le récapitulatif de l’analyse détaillée utilisent les
+  mêmes pastilles rondes que le bilan, au lieu des symboles en texte.
+
 ## [0.2.3] — 2026-07-25
 
 ### Corrigé

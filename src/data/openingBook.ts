@@ -27,6 +27,15 @@ export function findOpening(sans: string[]): Opening | null {
   return null;
 }
 
+/** Nombre de demi-coups d'ouverture reconnus par le livre au début de la partie */
+export function bookDepth(sans: string[]): number {
+  if (!byLine) return 0;
+  for (let len = Math.min(sans.length, 24); len >= 1; len--) {
+    if (byLine.has(sans.slice(0, len).join(' '))) return len;
+  }
+  return 0;
+}
+
 export interface Continuation {
   san: string;
   /** Ouverture atteinte par ce coup (la plus courte qui l'inclut) */
