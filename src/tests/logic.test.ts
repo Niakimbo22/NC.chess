@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { eloDelta } from '../store/profile';
+import {
+  DEFAULT_RD,
+  MIN_RD,
+  expectedScore,
+  inflateRd,
+  updateRating,
+} from '../store/glicko';
 import { formatClock, customTimeControl } from '../game/timeControls';
 import { generateRoomCode, normalizeRoomCode } from '../p2p/session';
 import { winPercent } from '../engine/analysis';
@@ -14,6 +21,46 @@ describe('eloDelta', () => {
   it('gagne peu contre un adversaire faible, beaucoup contre un fort', () => {
     expect(eloDelta(2000, 1000, 1)).toBeLessThan(2);
     expect(eloDelta(1000, 2000, 1)).toBeGreaterThan(30);
+  });
+});
+
+describe('Glicko', () => {
+  it('donne ~50% de chances à niveau égal', () => {
+    expect(expectedScore(1500, 1500, 50)).toBeCloseTo(0.5, 2);
+    expect(expectedScore(1700, 1500, 50)).toBeGreaterThan(0.5);
+    expect(expectedScore(1300, 1500, 50)).toBeLessThan(0.5);
+  });
+
+  it('une victoire fait monter, une défaite fait descendre, la nulle est entre les deux', () => {
+    const player = { rating: 1500, rd: 200 };
+    const opp = { rating: 1500, rd: 40 };
+    const win = updateRating(player, opp, 1).rating;
+    const draw = updateRating(player, opp, 0.5).rating;
+    const loss = updateRating(player, opp, 0).rating;
+    expect(win).toBeGreaterThan(draw);
+    expect(draw).toBeGreaterThan(loss);
+    expect(draw).toBeCloseTo(1500, 0);
+  });
+
+  it('un rating provisoire (RD élevé) bouge bien plus qu\'un rating établi', () => {
+    const opp = { rating: 1500, rd: 40 };
+    const provisoire = updateRating({ rating: 1500, rd: DEFAULT_RD }, opp, 1);
+    const etabli = updateRating({ rating: 1500, rd: 50 }, opp, 1);
+    expect(provisoire.rating - 1500).toBeGreaterThan(etabli.rating - 1500);
+    expect(provisoire.rating - 1500).toBeGreaterThan(80);
+    expect(etabli.rating - 1500).toBeLessThan(15);
+  });
+
+  it('jouer une partie réduit le RD (le rating devient plus fiable)', () => {
+    const after = updateRating({ rating: 1500, rd: DEFAULT_RD }, { rating: 1500, rd: 40 }, 1);
+    expect(after.rd).toBeLessThan(DEFAULT_RD);
+    expect(after.rd).toBeGreaterThanOrEqual(MIN_RD);
+  });
+
+  it('l\'inactivité regonfle le RD, plafonné à DEFAULT_RD', () => {
+    expect(inflateRd(50, 0)).toBe(50);
+    expect(inflateRd(50, 30)).toBeGreaterThan(50);
+    expect(inflateRd(50, 100000)).toBe(DEFAULT_RD);
   });
 });
 

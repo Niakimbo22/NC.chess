@@ -8,6 +8,7 @@ import {
   flairLabel,
   useProfile,
 } from '../store/profile';
+import { PROVISIONAL_RD } from '../store/glicko';
 import { useFriends, extractFriendCode, pairRoomCode } from '../store/friends';
 import { loadGameHistory, deleteGameFromHistory, type SavedGame } from '../store/gameHistory';
 import { getBot } from '../bots/bots';
@@ -98,22 +99,34 @@ export default function Profile() {
           </div>
           <table className="stats-table">
             <thead>
-              <tr><th>Cadence</th><th>V</th><th>N</th><th>D</th></tr>
+              <tr><th>Cadence</th><th>Elo</th><th>V</th><th>N</th><th>D</th></tr>
             </thead>
             <tbody>
-              {Object.entries(profile.stats).map(([cat, s]) => (
-                <tr key={cat}>
-                  <td>{cat === 'none' ? 'sans pendule' : cat}</td>
-                  <td className="stat-win">{s.wins}</td>
-                  <td className="stat-draw">{s.draws}</td>
-                  <td className="stat-loss">{s.losses}</td>
-                </tr>
-              ))}
+              {Object.entries(profile.stats).map(([cat, s]) => {
+                const r = profile.ratings?.[cat];
+                const provisional = r ? r.rd > PROVISIONAL_RD : true;
+                return (
+                  <tr key={cat}>
+                    <td>{cat === 'none' ? 'sans pendule' : cat}</td>
+                    <td title={provisional ? 'Classement provisoire (encore en calibrage)' : undefined}>
+                      {r ? Math.round(r.rating) : '—'}
+                      {r && provisional && <span className="elo-provisional">?</span>}
+                    </td>
+                    <td className="stat-win">{s.wins}</td>
+                    <td className="stat-draw">{s.draws}</td>
+                    <td className="stat-loss">{s.losses}</td>
+                  </tr>
+                );
+              })}
               {Object.keys(profile.stats).length === 0 && (
-                <tr><td colSpan={4} style={{ color: 'var(--text-dim)' }}>Joue une partie classée pour commencer !</td></tr>
+                <tr><td colSpan={5} style={{ color: 'var(--text-dim)' }}>Joue une partie classée pour commencer !</td></tr>
               )}
             </tbody>
           </table>
+          <p className="stats-note">
+            Système Glicko (comme chess.com) : un classement neuf ou marqué «&nbsp;?&nbsp;» est
+            <em> provisoire</em> et bouge beaucoup, puis se stabilise au fil des parties.
+          </p>
           <h2 style={{ marginTop: 16 }}>🧩 Puzzles</h2>
           <p style={{ color: 'var(--text-dim)', margin: 0 }}>
             {profile.puzzleSolved} résolus · {profile.puzzleFailed} ratés · record rush : {profile.puzzleRushBest}

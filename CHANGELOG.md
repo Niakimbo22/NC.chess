@@ -8,6 +8,28 @@ et le versionnage suit [SemVer](https://semver.org/lang/fr/) :
 La version affichée dans l'app (sidebar + Réglages → À propos) provient de
 `package.json`.
 
+## [0.3.0] — 2026-07-25
+
+### Changé
+- **Classement passé au vrai système de chess.com : Glicko (au lieu d'un Elo à
+  facteur K fixe).** Chaque rating porte désormais un *Rating Deviation* (RD),
+  l'incertitude sur la vraie force du joueur :
+  - un classement neuf ou repris après une longue pause est **provisoire** (RD
+    élevé) et bouge beaucoup — il se cale en quelques parties — puis se stabilise
+    (petits mouvements) une fois établi ;
+  - l'ampleur d'une variation tient compte de la fiabilité de l'adversaire : les
+    bots, moteurs à Elo fixe, sont traités comme des adversaires très fiables ;
+  - le RD se regonfle avec l'inactivité, si bien qu'un retour après des mois
+    rebouge le classement plus vite.
+- **Ratings séparés par cadence** (bullet / blitz / rapide / classique), comme
+  sur chess.com, au lieu d'un unique Elo partagé. Une nouvelle cadence démarre
+  de la force déjà connue du joueur.
+- **Puzzles** notés eux aussi en Glicko (avec leur propre RD).
+
+### Ajouté
+- Colonne **Elo par cadence** dans le tableau des statistiques du profil, avec
+  un marqueur «&nbsp;?&nbsp;» pour les classements encore provisoires.
+
 ## [0.2.2] — 2026-07-25
 
 ### Changé

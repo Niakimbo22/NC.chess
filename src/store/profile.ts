@@ -1,11 +1,30 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { DEFAULT_RD, inflateRd, updateRating, type Rating } from './glicko';
 
 export interface CategoryStats {
   wins: number;
   losses: number;
   draws: number;
 }
+
+/** État Glicko d'une cadence : rating, incertitude (RD) et date de dernière partie. */
+export interface CategoryRating {
+  rating: number;
+  rd: number;
+  /** timestamp de la dernière partie classée dans cette cadence (pour l'inflation du RD). */
+  lastPlayed: number;
+}
+
+const DAY_MS = 86_400_000;
+/**
+ * Les bots sont des adversaires calibrés (moteur à Elo fixe) : on les traite
+ * comme des joueurs au rating très fiable (RD faible), de sorte que la variation
+ * du joueur dépende avant tout de SA propre incertitude.
+ */
+const BOT_RD = 40;
+/** Les puzzles ont un rating un peu moins « dur » qu'un moteur fixe. */
+const PUZZLE_RD = 60;
 
 export interface ProfileState {
   pseudo: string;
@@ -18,9 +37,14 @@ export interface ProfileState {
   banner: string;
   /** Drapeau/emoji de pays optionnel */
   country: string;
+  /** Rating « vitrine » : le rating de la dernière cadence jouée (échelle Elo). */
   elo: number;
   eloHistory: { date: number; elo: number }[];
+  /** Ratings Glicko séparés par cadence (bullet/blitz/rapide/classique/none). */
+  ratings: Record<string, CategoryRating>;
   puzzleElo: number;
+  /** Incertitude (RD) du rating puzzle. */
+  puzzleRd: number;
   puzzleSolved: number;
   puzzleFailed: number;
   puzzleRushBest: number;
@@ -79,6 +103,10 @@ export function flairLabel(id: string): string {
 
 const K_FACTOR = 32;
 
+/**
+ * Ancien calcul Elo à facteur K fixe. Conservé comme utilitaire/point de
+ * comparaison ; le classement réel passe désormais par Glicko (voir `glicko.ts`).
+ */
 export function eloDelta(playerElo: number, opponentElo: number, score: number, k = K_FACTOR): number {
   const expected = 1 / (1 + Math.pow(10, (opponentElo - playerElo) / 400));
   return Math.round(k * (score - expected));
@@ -93,7 +121,9 @@ const DEFAULTS = {
   country: '',
   elo: 400,
   eloHistory: [] as { date: number; elo: number }[],
+  ratings: {} as Record<string, CategoryRating>,
   puzzleElo: 400,
+  puzzleRd: DEFAULT_RD,
   puzzleSolved: 0,
   puzzleFailed: 0,
   puzzleRushBest: 0,
@@ -107,8 +137,21 @@ export const useProfile = create<ProfileState>()(
       setProfile: (p) => set(p),
       recordRatedGame: (opponentElo, score, category) => {
         const state = get();
-        const delta = eloDelta(state.elo, opponentElo, score);
-        const newElo = Math.max(100, state.elo + delta);
+        const now = Date.now();
+        // Rating de la cadence AVANT la partie. Nouvelle cadence ⇒ on part de la
+        // force déjà connue du joueur (son Elo actuel) avec l'incertitude maximale :
+        // le rating se cale ensuite très vite. Cadence connue ⇒ on gonfle d'abord
+        // le RD selon le temps d'inactivité.
+        const prev = state.ratings[category];
+        const before: Rating = prev
+          ? { rating: prev.rating, rd: inflateRd(prev.rd, (now - prev.lastPlayed) / DAY_MS) }
+          : { rating: state.elo, rd: DEFAULT_RD };
+
+        const after = updateRating(before, { rating: opponentElo, rd: BOT_RD }, score);
+        const newRating = Math.max(100, after.rating);
+        const displayElo = Math.round(newRating);
+        const delta = displayElo - Math.round(before.rating);
+
         const stats = { ...state.stats };
         const cat = stats[category] ?? { wins: 0, losses: 0, draws: 0 };
         stats[category] = {
@@ -116,22 +159,27 @@ export const useProfile = create<ProfileState>()(
           losses: cat.losses + (score === 0 ? 1 : 0),
           draws: cat.draws + (score === 0.5 ? 1 : 0),
         };
+
         set({
-          elo: newElo,
+          elo: displayElo,
+          ratings: { ...state.ratings, [category]: { rating: newRating, rd: after.rd, lastPlayed: now } },
           stats,
-          eloHistory: [...state.eloHistory, { date: Date.now(), elo: newElo }].slice(-500),
+          eloHistory: [...state.eloHistory, { date: now, elo: displayElo }].slice(-500),
         });
         return delta;
       },
       recordPuzzle: (puzzleRating, solved) => {
         const state = get();
-        const delta = eloDelta(state.puzzleElo, puzzleRating, solved ? 1 : 0, 24);
+        const before: Rating = { rating: state.puzzleElo, rd: state.puzzleRd ?? DEFAULT_RD };
+        const after = updateRating(before, { rating: puzzleRating, rd: PUZZLE_RD }, solved ? 1 : 0);
+        const newElo = Math.max(100, Math.round(after.rating));
         set({
-          puzzleElo: Math.max(100, state.puzzleElo + delta),
+          puzzleElo: newElo,
+          puzzleRd: after.rd,
           puzzleSolved: state.puzzleSolved + (solved ? 1 : 0),
           puzzleFailed: state.puzzleFailed + (solved ? 0 : 1),
         });
-        return delta;
+        return newElo - before.rating;
       },
       recordRushScore: (score) => {
         const state = get();
