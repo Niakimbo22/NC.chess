@@ -101,6 +101,28 @@ export function flairLabel(id: string): string {
   return FLAIRS.find((f) => f.id === id)?.label ?? '';
 }
 
+/**
+ * Cadence « principale » du joueur : celle où il a joué le plus de parties.
+ * Sert de rating vitrine (en-tête de profil, accueil, P2P) — plus stable et
+ * représentatif que la dernière cadence jouée. `prefer` départage les égalités
+ * (typiquement la cadence qu'on vient de jouer).
+ */
+export function mainCategory(
+  stats: Record<string, CategoryStats>,
+  prefer?: string
+): string | null {
+  let best: string | null = null;
+  let bestTotal = -1;
+  for (const [cat, s] of Object.entries(stats)) {
+    const total = s.wins + s.losses + s.draws;
+    if (total > bestTotal || (total === bestTotal && cat === prefer)) {
+      best = cat;
+      bestTotal = total;
+    }
+  }
+  return best;
+}
+
 const K_FACTOR = 32;
 
 /**
@@ -160,10 +182,16 @@ export const useProfile = create<ProfileState>()(
           draws: cat.draws + (score === 0.5 ? 1 : 0),
         };
 
+        const ratings = { ...state.ratings, [category]: { rating: newRating, rd: after.rd, lastPlayed: now } };
+        // Rating vitrine = cadence la plus jouée (la partie courante départage).
+        const mainCat = mainCategory(stats, category) ?? category;
+        const mainElo = Math.round(mainCat === category ? newRating : ratings[mainCat]?.rating ?? newRating);
+
         set({
-          elo: displayElo,
-          ratings: { ...state.ratings, [category]: { rating: newRating, rd: after.rd, lastPlayed: now } },
+          elo: mainElo,
+          ratings,
           stats,
+          // La progression suit la cadence qui vient de changer (le résultat du jour).
           eloHistory: [...state.eloHistory, { date: now, elo: displayElo }].slice(-500),
         });
         return delta;

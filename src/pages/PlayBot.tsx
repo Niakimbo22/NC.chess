@@ -167,9 +167,13 @@ function BotGame({
       else if (score === 0) playSound('Defeat');
       else playSound('Draw');
       let delta: number | null = null;
+      let eloAfter: number | undefined;
       if (rated) {
         delta = profile.recordRatedGame(bot.elo, score, tc.category);
         setEloChange(delta);
+        // Rating de la cadence effectivement jouée, après mise à jour Glicko.
+        const r = useProfile.getState().ratings[tc.category];
+        if (r) eloAfter = Math.round(r.rating);
       }
       saveGameToHistory({
         mode: 'bot',
@@ -179,7 +183,7 @@ function BotGame({
         timeControl: tc.id,
         result: result.winner === null ? '1/2-1/2' : result.winner === 'w' ? '1-0' : '0-1',
         botId: bot.id,
-        playerEloAfter: rated ? profile.elo + (delta ?? 0) : undefined,
+        playerEloAfter: eloAfter,
       });
     },
   });
