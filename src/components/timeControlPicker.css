@@ -1,36 +1,186 @@
-.tcp-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-  gap: 8px;
-}
-
-.tcp-btn {
+.tcp {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 10px 6px;
-  font-size: 14px;
-  font-weight: 600;
-  border: 2px solid transparent;
+  gap: 12px;
 }
-.tcp-btn.selected { border-color: var(--accent); background: var(--bg-hover); }
-.tcp-icon { font-size: 20px; }
+
+/* ---- Récapitulatif de la cadence choisie ---- */
+.tcp-readout {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 14% 20%, rgba(212, 175, 55, 0.16), transparent 60%),
+    var(--bg-panel-2);
+  border: 1px solid rgba(212, 175, 55, 0.28);
+}
+.tcp-readout-value {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  background: var(--gradient-gold);
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: goldShimmer 5s linear infinite;
+}
+.tcp-readout-value em {
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 700;
+}
+.tcp-readout-label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 700;
+  font-size: 15px;
+}
+.tcp-readout-label small {
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* ---- Sans pendule : le choix à part ---- */
+.tcp-noclock {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  padding: 11px 13px;
+  border-radius: 12px;
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.tcp-noclock-icon {
+  font-size: 22px;
+  width: 30px;
+  text-align: center;
+  color: var(--gold-light);
+}
+.tcp-noclock strong { display: block; font-size: 14px; }
+.tcp-noclock small { color: var(--text-dim); font-size: 12px; }
+.tcp-noclock.selected {
+  border-color: var(--gold);
+  background: rgba(212, 175, 55, 0.12);
+}
+
+/* ---- Familles de cadences ---- */
+.tcp-family { display: flex; flex-direction: column; gap: 7px; }
+.tcp-family-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+}
+.tcp-family-icon { font-size: 14px; }
+.tcp-family-head small {
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-dim);
+}
+
+.tcp-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 7px;
+}
+.tcp-chip {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 1px;
+  padding: 10px 6px;
+  border-radius: 11px;
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+.tcp-chip-main {
+  font-size: 19px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.tcp-chip-inc {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+.tcp-chip:active { transform: scale(0.95); }
+.tcp-chip.selected {
+  border-color: var(--gold);
+  background: rgba(212, 175, 55, 0.16);
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.35), 0 4px 14px rgba(212, 175, 55, 0.14);
+}
+.tcp-chip.selected .tcp-chip-main { color: var(--gold-light); }
+.tcp-chip.selected .tcp-chip-inc { color: var(--gold); }
+
+@media (hover: hover) {
+  .tcp-chip:hover { border-color: rgba(212, 175, 55, 0.5); transform: translateY(-1px); }
+  .tcp-noclock:hover { border-color: rgba(212, 175, 55, 0.5); }
+}
+
+/* ---- Personnalisé ---- */
+.tcp-custom-toggle {
+  padding: 10px;
+  border-radius: 11px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--bg-panel-2);
+  border: 1px dashed var(--border);
+  color: var(--text-dim);
+}
+.tcp-custom-toggle.selected {
+  border-style: solid;
+  border-color: var(--gold);
+  color: var(--gold-light);
+}
 
 .tcp-custom {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   align-items: flex-end;
-  margin-top: 12px;
+  flex-wrap: wrap;
+  padding: 11px;
+  border-radius: 11px;
   background: var(--bg-panel-2);
-  padding: 12px;
-  border-radius: var(--radius);
+  border: 1px solid var(--border);
 }
 .tcp-custom label {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-dim);
+  flex: 1;
+  min-width: 92px;
 }
-.tcp-custom input { width: 90px; }
+.tcp-custom input {
+  padding: 8px 9px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+}
+.tcp-custom .primary { flex: none; padding: 9px 18px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tcp-readout-value { animation: none; }
+}

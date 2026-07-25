@@ -44,7 +44,7 @@ function BotSetup({ onStart }: { onStart: (c: BotConfig) => void }) {
   const profile = useProfile();
   const [botId, setBotId] = useState<string>('tom');
   const [colorChoice, setColorChoice] = useState<'w' | 'b' | 'random'>('random');
-  const [tc, setTc] = useState<TimeControl>(TIME_CONTROLS[0]);
+  const [tc, setTc] = useState<TimeControl>(TIME_CONTROLS.find((t) => t.id === '10+0')!);
   const [rated, setRated] = useState(true);
 
   const bot = BOTS.find((b) => b.id === botId)!;

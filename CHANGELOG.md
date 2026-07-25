@@ -8,6 +8,26 @@ et le versionnage suit [SemVer](https://semver.org/lang/fr/) :
 La version affichée dans l'app (sidebar + Réglages → À propos) provient de
 `package.json`.
 
+## [0.2.2] — 2026-07-25
+
+### Changé
+- **Cadence par défaut : 10 minutes** (modes Néo et IA), au lieu de « sans pendule ».
+- **Sélecteur de cadence repensé** : les treize cartes identiques sur deux
+  colonnes laissent place à un récapitulatif doré de la cadence choisie, puis
+  des pastilles compactes **groupées par famille** (Bullet / Blitz / Rapide /
+  Classique) avec le temps en gros et l'incrément en exposant. « Sans pendule »
+  devient une option à part entière, et tout tient sans scroller.
+- **Blasons des styles de Néo** : les cinq niveaux partageaient le même
+  médaillon. Chacun a désormais son identité complète — silhouette, motif de
+  fond et métal propres :
+  - **Néo Éveil** : cercle cuivré, soleil qui se lève.
+  - **Néo Apprenti** : écu arrondi, grand livre ouvert.
+  - **Néo Tacticien** : écu pointu, sabres croisés.
+  - **Néo Stratège** : hexagone, rose des vents sur trame de plan.
+  - **Néo Maître** : cercle d'obsidienne et d'or blanc, couronne sur la tête et
+    couronne de laurier.
+  Le blason suit le niveau choisi jusque dans la boîte de dialogue en partie.
+
 ## [0.2.1] — 2026-07-25
 
 ### Changé

@@ -15,6 +15,7 @@ import {
   neoAfterOwnMove, neoBoardHint, neoAdvice, neoEnd,
 } from '../mascot/neoGame';
 import GameSheet from '../components/GameSheet';
+import NeoRankEmblem from '../components/NeoRankEmblem';
 import { NEO } from '../mascot/neo';
 import { useProfile } from '../store/profile';
 import { saveGameToHistory } from '../store/gameHistory';
@@ -51,7 +52,7 @@ export default function PlayNeo() {
 function NeoSetup({ onStart }: { onStart: (c: NeoConfig) => void }) {
   const [levelId, setLevelId] = useState<string>('neo-apprenti');
   const [colorChoice, setColorChoice] = useState<'w' | 'b' | 'random'>('w');
-  const [tc, setTc] = useState<TimeControl>(TIME_CONTROLS[0]); // « sans pendule » par défaut
+  const [tc, setTc] = useState<TimeControl>(TIME_CONTROLS.find((t) => t.id === '10+0')!);
   const level = getNeoLevel(levelId)!;
 
   return (
@@ -79,7 +80,7 @@ function NeoSetup({ onStart }: { onStart: (c: NeoConfig) => void }) {
             className={`neo-level-card ${levelId === l.id ? 'selected' : ''}`}
             onClick={() => setLevelId(l.id)}
           >
-            <span className="neo-level-avatar"><img src={NEO.avatar} alt="" /></span>
+            <span className="neo-level-avatar"><NeoRankEmblem levelId={l.id} size={62} /></span>
             <span className="neo-level-name">{l.name}</span>
             <span className="neo-level-elo">{l.elo} Elo</span>
             <span className="neo-level-style">{l.style}</span>
@@ -88,7 +89,7 @@ function NeoSetup({ onStart }: { onStart: (c: NeoConfig) => void }) {
       </div>
 
       <div className="panel neo-level-detail">
-        <span className="neo-level-detail-avatar"><img src={NEO.avatar} alt="" /></span>
+        <span className="neo-level-detail-avatar"><NeoRankEmblem levelId={level.id} size={54} /></span>
         <div>
           <h3 style={{ margin: 0 }}>
             {level.name} <span style={{ color: 'var(--text-dim)', fontWeight: 400 }}>({level.elo})</span>
@@ -105,8 +106,9 @@ function NeoSetup({ onStart }: { onStart: (c: NeoConfig) => void }) {
           <button className={colorChoice === 'b' ? 'selected' : ''} onClick={() => setColorChoice('b')}>♚ Noirs</button>
         </div>
         <h3 style={{ marginTop: 16 }}>Cadence</h3>
-        <p style={{ margin: '0 0 8px', color: 'var(--text-dim)', fontSize: 13 }}>
-          Conseil : joue <strong>sans pendule</strong> pour prendre le temps d’écouter Néo.
+        <p style={{ margin: '0 0 10px', color: 'var(--text-dim)', fontSize: 13 }}>
+          10 minutes laissent le temps d’écouter Néo. Passe <strong>sans pendule</strong>
+          {' '}si tu veux réfléchir sans aucune contrainte.
         </p>
         <TimeControlPicker value={tc} onChange={setTc} />
       </div>
@@ -469,7 +471,7 @@ function NeoGame({ config, onExit, onRematch }: { config: NeoConfig; onExit: () 
         {/* Boîte de dialogue de Néo : sa présence permanente. */}
         <div className={`neo-coach-card ${coach.tone}`}>
           <div className="neo-coach-avatar">
-            <img src={NEO.avatar} alt="Néo" />
+            <NeoRankEmblem levelId={level.id} size={44} />
             {(botThinking || coachBusy || adviceLoading) && <span className="neo-coach-dots"><i /><i /><i /></span>}
           </div>
           <div className="neo-coach-body">
