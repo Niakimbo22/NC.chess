@@ -91,16 +91,18 @@ function LocalGame({
           clockMs={game.clock?.[topColor]}
           clockActive={game.clockRunning && game.turn === topColor && !game.result}
         />
-        <Chessboard
-          fen={game.viewFen}
-          orientation={orientation}
-          playableColor={isLive && !game.result ? 'both' : null}
-          onMove={(m) => {
-            game.makeMove(m);
-            setDrawOffered(false);
-          }}
-          lastMove={game.lastMove}
-        />
+        <div className="game-board-fit">
+          <Chessboard
+            fen={game.viewFen}
+            orientation={orientation}
+            playableColor={isLive && !game.result ? 'both' : null}
+            onMove={(m) => {
+              game.makeMove(m);
+              setDrawOffered(false);
+            }}
+            lastMove={game.lastMove}
+          />
+        </div>
         <PlayerBar
           name={nameOf(bottomColor)}
           color={bottomColor}

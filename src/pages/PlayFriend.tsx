@@ -454,19 +454,21 @@ function FriendGame({
           clockActive={game.clockRunning && game.turn === oppColor && !game.result}
           subtitle={oppDisconnected ? '🔌 déconnecté…' : undefined}
         />
-        <Chessboard
-          fen={game.viewFen}
-          orientation={myColor}
-          playableColor={isLive && !game.result ? myColor : null}
-          onMove={(m) => {
-            const played = game.makeMove(m);
-            if (played) {
-              const c = gameRef.current.clock;
-              session.send({ type: 'move', uci: played.from + played.to + (played.promotion ?? ''), clockW: c?.w ?? null, clockB: c?.b ?? null });
-            }
-          }}
-          lastMove={game.lastMove}
-        />
+        <div className="game-board-fit">
+          <Chessboard
+            fen={game.viewFen}
+            orientation={myColor}
+            playableColor={isLive && !game.result ? myColor : null}
+            onMove={(m) => {
+              const played = game.makeMove(m);
+              if (played) {
+                const c = gameRef.current.clock;
+                session.send({ type: 'move', uci: played.from + played.to + (played.promotion ?? ''), clockW: c?.w ?? null, clockB: c?.b ?? null });
+              }
+            }}
+            lastMove={game.lastMove}
+          />
+        </div>
         <PlayerBar
           name={profile.pseudo}
           rating={profile.elo}
