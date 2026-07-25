@@ -2,11 +2,11 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useProfile } from '../store/profile';
 import MascotSpeech from '../components/MascotSpeech';
+import NeoAvatar from '../components/NeoAvatar';
 import { neoSay } from '../mascot/neo';
 import './home.css';
 
 const CARDS = [
-  { to: '/play/neo', icon: '♞', title: 'Jouer contre Néo', desc: 'Une partie guidée par ton cavalier coach. Le mode le plus éducatif.' },
   { to: '/play/bot', icon: '🤖', title: 'Jouer contre une IA', desc: 'Des bots de tous les niveaux, du débutant au grand maître.' },
   { to: '/play/friend', icon: '👥', title: 'Jouer entre amis', desc: 'Crée un salon avec un code (ex. AF3P) et joue en direct.' },
   { to: '/play/local', icon: '🪑', title: 'Sur le même écran', desc: 'Deux joueurs, un seul appareil, chacun son tour.' },
@@ -44,6 +44,27 @@ export default function Home() {
           </Link>
         </div>
       </div>
+      {/* Carte vedette : le mode Néo. Animée en permanence (pas de :hover,
+          donc bien vivante sur mobile aussi). */}
+      <Link to="/play/neo" className="home-neo-card">
+        <span className="home-neo-inner">
+          <span className="home-neo-badge">⚡ Le mode le plus éducatif</span>
+          <span className="home-neo-body">
+            <NeoAvatar size={62} spark bob className="home-neo-face" />
+            <span className="home-neo-text">
+              <strong>Jouer contre Néo</strong>
+              <span>
+                Une partie guidée par ton cavalier coach : il t’arrête avant la
+                gaffe, t’explique pourquoi, et te félicite quand tu trouves.
+              </span>
+            </span>
+          </span>
+          <span className="home-neo-cta">
+            Lancer une partie <span className="home-neo-arrow">→</span>
+          </span>
+        </span>
+      </Link>
+
       <div className="home-grid">
         {CARDS.map((c) => (
           <Link key={c.to} to={c.to} className="home-card">
