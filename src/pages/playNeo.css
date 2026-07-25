@@ -303,4 +303,19 @@
 @media (max-width: 900px) {
   .neo-setup-hero { flex-direction: column; text-align: center; padding: 18px; }
   .neo-setup-hero h1 { font-size: 24px; }
+
+  /* En partie, Néo reste visible mais compact : l'échiquier passe d'abord.
+     Le message est écrêté à trois lignes — le texte complet reste lisible en
+     le relisant à voix haute ou en ouvrant le tiroir. */
+  .neo-coach-card { padding: 8px 10px; gap: 9px; }
+  .neo-coach-avatar img { width: 36px; height: 36px; }
+  .neo-coach-text {
+    font-size: 13px;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .neo-advice-row button { font-size: 12.5px; padding: 9px 8px; }
 }

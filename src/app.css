@@ -124,6 +124,10 @@
   top: 0;
 }
 
+/* Actions gardées hors du tiroir : ce dont on se sert en jouant. */
+.game-quick-row { display: flex; gap: 6px; }
+.game-quick-row button { flex: 1; font-size: 13px; padding: 9px 10px; }
+
 .game-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .game-actions button { flex: 1; font-size: 13px; padding: 8px 10px; white-space: nowrap; }
 
@@ -209,8 +213,65 @@
   }
   .nav-sheet-sep { height: 1px; background: var(--border); margin: 6px 4px; }
   .app-main { padding: 10px; -webkit-overflow-scrolling: touch; }
-  .game-layout { grid-template-columns: 1fr; }
-  .game-side-col { height: auto; position: static; }
+
+  /* Une page de jeu, c'est un échiquier. Il prend toute la hauteur
+     disponible et la page ne défile plus : la liste des coups, l'ouverture et
+     les actions partent dans le tiroir (GameSheet). */
+  .game-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    max-width: none;
+    overflow: hidden;
+    /* La règle de bureau pose « align-items: start » : en colonne cet axe
+       devient l'horizontale, ce qui rétrécissait les colonnes et les collait
+       à gauche. On rétablit l'étirement. */
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+  .game-board-col {
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .game-side-col {
+    flex: none;
+    height: auto;
+    position: static;
+    gap: 8px;
+  }
+
+  /* L'échiquier se borne par le plus petit des deux axes, donc il reste carré
+     et entier quelle que soit la place laissée par les barres joueurs. */
+  .game-board-fit {
+    /* base 0 et largeur explicite : avec « flex: 1 1 auto » la taille du
+       conteneur dépendrait de l'échiquier, qui dépend lui-même de 100cqh —
+       la boucle se résolvait sur un échiquier deux fois trop petit. */
+    flex: 1 1 0;
+    width: 100%;
+    min-height: 0;
+    container-type: size;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .game-board-fit .nc-board { width: min(100%, 100cqh); }
+
+  /* Dans le tiroir, les actions ne sont plus une barre collante. */
+  .game-sheet .game-actions {
+    position: static;
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
   .home-hero h1 { font-size: 26px; }
 
   /* Barre d'actions toujours accessible sans avoir à scroller (coup suivant,

@@ -232,26 +232,69 @@ export async function pickBotMove(engine: Engine, bot: Bot, fen: string): Promis
   return result.best;
 }
 
+/** Tirage gaussien standard (Box–Muller), base de la distribution log-normale. */
+function gauss(): number {
+  let u = 0;
+  let v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+export interface ThinkContext {
+  /** Position à jouer : c'est elle qui dicte l'essentiel du rythme. */
+  fen?: string;
+  remainingMs?: number;
+  incrementMs?: number;
+  ply?: number;
+}
+
 /**
- * Temps de « réflexion » simulé pour rendre le bot plus humain : il ne doit
- * pas répondre instantanément. La durée varie autour d'une base liée à sa
- * force, avec de temps en temps un coup rapide (réflexe) ou une longue
- * réflexion. Bornée par la pendule pour ne pas flageller le bot en blitz.
+ * Temps de « réflexion » simulé. Un vrai joueur ne répond pas au même rythme
+ * à chaque coup : il enchaîne sa théorie d'ouverture, réplique du tac au tac
+ * quand un seul coup est jouable, et bloque plusieurs secondes quand la
+ * position est touffue. On modélise donc le délai à partir de la position
+ * elle-même, avec une loi log-normale (beaucoup de coups d'un rythme moyen,
+ * quelques longues réflexions) — un tirage uniforme donne un rythme mécanique.
  */
-export function botThinkDelay(bot: Bot, remainingMs?: number, ply?: number): number {
-  const base = bot.elo < 800 ? 700 : bot.elo < 1600 ? 1000 : 1300;
-  let delay = base + Math.random() * base; // base .. 2×base
+export function botThinkDelay(bot: Bot, ctx: ThinkContext = {}): number {
+  const { fen, remainingMs, incrementMs = 0, ply } = ctx;
 
-  // Les premiers coups (théorie d'ouverture) sont joués plus vite.
-  if (ply !== undefined && ply < 6) delay *= 0.45;
+  let legalMoves = 30;
+  let captures = 0;
+  let inCheck = false;
+  if (fen) {
+    try {
+      const chess = new Chess(fen);
+      const moves = chess.moves({ verbose: true });
+      legalMoves = moves.length;
+      captures = moves.filter((m) => m.captured).length;
+      inCheck = chess.inCheck();
+    } catch {
+      /* position illisible : on garde les valeurs par défaut */
+    }
+  }
 
-  // Rythme irrégulier : ~12 % de longues réflexions, ~22 % de coups réflexes.
-  const r = Math.random();
-  if (r < 0.12) delay *= 2.2;
-  else if (r < 0.34) delay *= 0.3;
+  // Un seul coup légal : personne ne réfléchit, on joue.
+  if (legalMoves === 1) return 300 + Math.round(Math.random() * 350);
 
-  // Ne jamais consommer plus de ~8 % du temps restant sur un coup.
-  if (remainingMs && remainingMs > 0) delay = Math.min(delay, remainingMs * 0.08);
+  // Un joueur fort pèse ses coups ; un débutant dégaine.
+  const base = bot.elo < 800 ? 1300 : bot.elo < 1600 ? 1700 : 2100;
 
-  return Math.max(250, Math.round(delay));
+  let factor = 0.7 + Math.min(legalMoves, 45) / 45; // position touffue = plus long
+  if (inCheck) factor *= 1.2; // il faut répondre juste
+  if (captures > 0) factor *= 1.1; // du matériel est en jeu
+  if (ply !== undefined && ply < 8) factor *= 0.5; // théorie d'ouverture
+
+  let delay = base * factor * Math.exp(gauss() * 0.4);
+
+  // Pendule : on étale le temps restant sur les coups à venir, et on accélère
+  // franchement quand il reste peu — exactement ce que fait un humain.
+  if (remainingMs && remainingMs > 0) {
+    const movesLeft = Math.max(12, 40 - (ply ?? 0) / 2);
+    delay = Math.min(delay, remainingMs / movesLeft + incrementMs * 0.7);
+    if (remainingMs < 30_000) delay = Math.min(delay, remainingMs * 0.04);
+  }
+
+  return Math.round(Math.min(Math.max(delay, 550), 7000));
 }

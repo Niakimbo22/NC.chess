@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Color, Square } from 'chess.js';
 import Chessboard, { type Arrow } from '../components/board/Chessboard';
 import { GameOverModal, MoveList, NavButtons, PlayerBar } from '../components/GamePanel';
+import GameSheet from '../components/GameSheet';
 import TimeControlPicker from '../components/TimeControlPicker';
 import { TIME_CONTROLS, type TimeControl } from '../game/timeControls';
 import { useChessGame } from '../game/useChessGame';
@@ -210,7 +211,17 @@ function BotGame({
     const fen = game.fen;
     Promise.all([
       pickBotMove(engine, bot, fen),
-      new Promise((r) => setTimeout(r, botThinkDelay(bot, game.clock?.[botColor], game.history.length))),
+      new Promise((r) =>
+        setTimeout(
+          r,
+          botThinkDelay(bot, {
+            fen,
+            remainingMs: game.clock?.[botColor],
+            incrementMs: tc.increment * 1000,
+            ply: game.history.length,
+          })
+        )
+      ),
     ])
       .then(([uci]) => {
         thinkingRef.current = false;
@@ -334,14 +345,16 @@ function BotGame({
             <span className="bot-speech-text">{botMessage}</span>
           </div>
         )}
-        <Chessboard
-          fen={game.viewFen}
-          orientation={playerColor}
-          playableColor={isLive && !game.result ? playerColor : null}
-          onMove={(m) => game.makeMove(m)}
-          lastMove={game.lastMove}
-          arrows={hintArrow}
-        />
+        <div className="game-board-fit">
+          <Chessboard
+            fen={game.viewFen}
+            orientation={playerColor}
+            playableColor={isLive && !game.result ? playerColor : null}
+            onMove={(m) => game.makeMove(m)}
+            lastMove={game.lastMove}
+            arrows={hintArrow}
+          />
+        </div>
         <PlayerBar
           name={playerName}
           rating={rated ? profile.elo : null}
@@ -354,25 +367,31 @@ function BotGame({
       </div>
       <div className="game-side-col">
         {!engineReady && <div className="bot-message">Chargement du moteur… ⏳</div>}
-        <OpeningLabel history={game.history} />
-        <MoveList history={game.history} viewIndex={game.viewIndex} onSelect={game.goTo} />
-        <NavButtons historyLength={game.history.length} viewIndex={game.viewIndex} onGoTo={game.goTo} />
-        <div className="game-actions">
-          {!game.result ? (
-            <>
-              <button onClick={showHint} disabled={game.turn !== playerColor}>💡 Indice</button>
-              <button onClick={takeBack} disabled={game.history.length === 0}>↩ Reprendre</button>
-              <button onClick={offerDraw}>½ Nulle</button>
-              <button className="danger" onClick={() => game.resign(playerColor)}>🏳 Abandon</button>
-            </>
-          ) : (
-            <>
-              <button className="primary" onClick={onRematch}>⚔️ Revanche</button>
-              <button onClick={() => navigate('/analysis', { state: { pgn: game.chessRef.current.pgn() } })}>📊 Analyser</button>
-              <button onClick={onExit}>Changer de bot</button>
-            </>
-          )}
-        </div>
+        {!game.result && (
+          <div className="game-quick-row">
+            <button onClick={showHint} disabled={game.turn !== playerColor}>💡 Indice</button>
+          </div>
+        )}
+        <GameSheet label={game.result ? 'Partie terminée' : 'Coups & options'}>
+          <OpeningLabel history={game.history} />
+          <MoveList history={game.history} viewIndex={game.viewIndex} onSelect={game.goTo} />
+          <NavButtons historyLength={game.history.length} viewIndex={game.viewIndex} onGoTo={game.goTo} />
+          <div className="game-actions">
+            {!game.result ? (
+              <>
+                <button onClick={takeBack} disabled={game.history.length === 0}>↩ Reprendre</button>
+                <button onClick={offerDraw}>½ Nulle</button>
+                <button className="danger" onClick={() => game.resign(playerColor)}>🏳 Abandon</button>
+              </>
+            ) : (
+              <>
+                <button className="primary" onClick={onRematch}>⚔️ Revanche</button>
+                <button onClick={() => navigate('/analysis', { state: { pgn: game.chessRef.current.pgn() } })}>📊 Analyser</button>
+                <button onClick={onExit}>Changer de bot</button>
+              </>
+            )}
+          </div>
+        </GameSheet>
       </div>
       {game.result && !modalDismissed && (
         <GameOverModal

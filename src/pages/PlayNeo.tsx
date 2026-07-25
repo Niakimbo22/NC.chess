@@ -14,6 +14,7 @@ import {
   classifyLoss, warnThreshold, neoStart, neoPraise, neoNudge, neoWarn,
   neoAfterOwnMove, neoBoardHint, neoAdvice, neoEnd,
 } from '../mascot/neoGame';
+import GameSheet from '../components/GameSheet';
 import { NEO } from '../mascot/neo';
 import { useProfile } from '../store/profile';
 import { saveGameToHistory } from '../store/gameHistory';
@@ -330,7 +331,17 @@ function NeoGame({ config, onExit, onRematch }: { config: NeoConfig; onExit: () 
     const fen = game.fen;
     Promise.all([
       pickBotMove(engine, level.bot, fen),
-      new Promise((r) => setTimeout(r, botThinkDelay(level.bot, game.clock?.[botColor], game.history.length))),
+      new Promise((r) =>
+        setTimeout(
+          r,
+          botThinkDelay(level.bot, {
+            fen,
+            remainingMs: game.clock?.[botColor],
+            incrementMs: tc.increment * 1000,
+            ply: game.history.length,
+          })
+        )
+      ),
     ])
       .then(([uci]) => {
         thinkingRef.current = false;
@@ -431,14 +442,16 @@ function NeoGame({ config, onExit, onRematch }: { config: NeoConfig; onExit: () 
           clockActive={game.clockRunning && game.turn === botColor && !game.result}
           subtitle={subtitle}
         />
-        <Chessboard
-          fen={game.viewFen}
-          orientation={playerColor}
-          playableColor={canAct ? playerColor : null}
-          onMove={handlePlayerMove}
-          lastMove={game.lastMove}
-          arrows={hintArrow}
-        />
+        <div className="game-board-fit">
+          <Chessboard
+            fen={game.viewFen}
+            orientation={playerColor}
+            playableColor={canAct ? playerColor : null}
+            onMove={handlePlayerMove}
+            lastMove={game.lastMove}
+            arrows={hintArrow}
+          />
+        </div>
         <PlayerBar
           name={profile.pseudo}
           rating={null}
@@ -479,24 +492,28 @@ function NeoGame({ config, onExit, onRematch }: { config: NeoConfig; onExit: () 
           </div>
         )}
 
-        <OpeningLabel history={game.history} />
-        <MoveList history={game.history} viewIndex={game.viewIndex} onSelect={game.goTo} />
-        <NavButtons historyLength={game.history.length} viewIndex={game.viewIndex} onGoTo={game.goTo} />
+        {/* Sur mobile : rangé dans un tiroir pour laisser l'écran à l'échiquier.
+            Sur grand écran : affiché directement dans la colonne. */}
+        <GameSheet label={game.result ? 'Partie terminée' : 'Coups & options'}>
+          <OpeningLabel history={game.history} />
+          <MoveList history={game.history} viewIndex={game.viewIndex} onSelect={game.goTo} />
+          <NavButtons historyLength={game.history.length} viewIndex={game.viewIndex} onGoTo={game.goTo} />
 
-        <div className="game-actions">
-          {!game.result ? (
-            <>
-              <button onClick={takeBack} disabled={game.history.length === 0}>↩ Reprendre</button>
-              <button className="danger" onClick={() => game.resign(playerColor)}>🏳 Abandon</button>
-            </>
-          ) : (
-            <>
-              <button className="primary" onClick={onRematch}>⚔️ Revanche</button>
-              <button onClick={() => navigate('/analysis', { state: { pgn: game.chessRef.current.pgn() } })}>📊 Analyser</button>
-              <button onClick={onExit}>Changer de niveau</button>
-            </>
-          )}
-        </div>
+          <div className="game-actions">
+            {!game.result ? (
+              <>
+                <button onClick={takeBack} disabled={game.history.length === 0}>↩ Reprendre</button>
+                <button className="danger" onClick={() => game.resign(playerColor)}>🏳 Abandon</button>
+              </>
+            ) : (
+              <>
+                <button className="primary" onClick={onRematch}>⚔️ Revanche</button>
+                <button onClick={() => navigate('/analysis', { state: { pgn: game.chessRef.current.pgn() } })}>📊 Analyser</button>
+                <button onClick={onExit}>Changer de niveau</button>
+              </>
+            )}
+          </div>
+        </GameSheet>
       </div>
 
       {/* Boîte de dialogue d'avertissement (mode guidé) */}

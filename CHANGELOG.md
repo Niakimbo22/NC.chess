@@ -8,6 +8,27 @@ et le versionnage suit [SemVer](https://semver.org/lang/fr/) :
 La version affichée dans l'app (sidebar + Réglages → À propos) provient de
 `package.json`.
 
+## [0.2.1] — 2026-07-25
+
+### Changé
+- **L'échiquier est la page.** En partie sur mobile, il occupe toute la hauteur
+  disponible, centré, et la page ne défile plus. La liste des coups, le nom de
+  l'ouverture, la navigation, la reprise, l'abandon et l'accès aux réglages
+  sont regroupés dans un **tiroir** qui s'ouvre à la demande (« Coups &
+  options »). Appliqué au mode Néo comme aux parties contre une IA.
+- **Voix du coach** : les voix de synthèse Google et eSpeak sont désormais
+  écartées (timbre monocorde) au profit des voix neurales/premium du système ;
+  débit et hauteur légèrement adoucis.
+- **Rythme de jeu de l'adversaire** : le temps de réflexion est calculé depuis
+  la position (nombre de coups légaux, échec, prises disponibles) suivant une
+  loi log-normale, au lieu d'un tirage uniforme. L'adversaire enchaîne sa
+  théorie d'ouverture, répond du tac au tac sur un coup forcé, réfléchit
+  plusieurs secondes sur une position touffue et accélère en fin de pendule.
+
+### Corrigé
+- Néo ne lit plus les emoji à voix haute (« Tu vois loin aujourd'hui. yeux »).
+- La carte vedette de l'accueil ne débordait plus son liseré doré sur la page.
+
 ## [0.2.0] — 2026-07-24
 
 ### Ajouté
